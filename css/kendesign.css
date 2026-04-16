@@ -312,37 +312,47 @@ body {
 
 .kd-sticker-delete {
     position: absolute;
-    top: -12px;
-    right: -12px;
-    width: 24px;
-    height: 24px;
+    top: -15px; /* Back to original */
+    right: -15px;
+    width: 32px; /* Back to original */
+    height: 32px;
     background: var(--kd-error);
     color: white;
     border-radius: 50%;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 14px;
+    font-size: 18px; /* Back to original */
     cursor: pointer;
-    box-shadow: 0 4px 8px rgba(0,0,0,0.2);
-    z-index: 20;
-    opacity: 1; /* Always visible for mobile friendliness */
-    transition: opacity 0.2s;
+    box-shadow: 0 4px 12px rgba(244, 84, 66, 0.4);
+    z-index: 25;
+    opacity: 1;
+    transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    border: 2px solid white;
+}
+
+.kd-sticker-delete:active {
+    transform: scale(0.8);
 }
 
 .kd-sticker-resizer {
     position: absolute;
-    bottom: -8px;
-    right: -8px;
-    width: 16px;
-    height: 16px;
+    bottom: -10px;
+    right: -10px;
+    width: 24px;
+    height: 24px;
     background: var(--kd-primary-blue);
-    border: 2px solid white;
+    border: 3px solid white;
     border-radius: 50%;
     cursor: nwse-resize;
-    z-index: 20;
-    opacity: 1; /* Always visible for mobile friendliness */
-    transition: opacity 0.2s;
+    z-index: 25;
+    opacity: 1;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+    transition: all 0.2s;
+}
+
+.kd-sticker-resizer:active {
+    transform: scale(1.2);
 }
 
 .kd-placed-sticker img {
@@ -385,9 +395,16 @@ body {
     color: white;
 }
 
-.kd-btn-tool .material-icons { font-size: 20px; }
+.kd-btn-tool .material-icons { 
+    font-size: 20px; 
+    pointer-events: none;
+}
 
-.kd-btn-tool .material-icons { font-size: 20px; }
+.kd-sticker-delete .material-icons, 
+.kd-delete-sig .material-icons, 
+.kd-print-sig .material-icons {
+    pointer-events: none;
+}
 
 .kd-divider {
     width: 1px;
@@ -518,8 +535,22 @@ body {
 }
 
 .kd-v6-title {
-    font-size: 24px;
+    font-size: min(28px, 6.5vw); /* Responsive size to prevent wrapping */
     font-weight: 900;
+    white-space: nowrap; /* Force single line if possible */
+}
+
+.kd-unlock-char {
+    cursor: pointer;
+    transition: all 0.2s;
+    display: inline-block;
+    padding: 0 2px;
+}
+
+.kd-unlock-char.active-tap {
+    color: var(--kd-primary-blue) !important;
+    text-shadow: 0 0 10px rgba(40, 200, 200, 0.5);
+    transform: scale(1.1);
 }
 
 .kd-signature-wall-dense {
@@ -569,21 +600,25 @@ body {
 }
 
 .kd-delete-sig, .kd-print-sig {
-    width: 24px;
-    height: 24px;
-    background: rgba(255, 255, 255, 0.8);
+    width: 36px; /* Back to original */
+    height: 36px;
+    background: white;
     border-radius: 50%;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 16px;
+    font-size: 20px;
     cursor: pointer;
-    border: none;
-    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    border: 1px solid rgba(0,0,0,0.1);
+    box-shadow: 0 4px 10px rgba(0,0,0,0.15);
     opacity: 0;
     pointer-events: none;
-    transition: opacity 0.2s;
+    transition: all 0.2s;
     z-index: 10;
+}
+
+.kd-delete-sig:active, .kd-print-sig:active {
+    transform: scale(0.9);
 }
 
 .kd-delete-sig { color: var(--kd-error); }
