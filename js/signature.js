@@ -118,19 +118,18 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         
         container.appendChild(sticker);
-        const deleteHandler = (e) => {
+        
+        const deleteBtn = sticker.querySelector('.kd-sticker-delete');
+        const performDelete = (e) => {
+            e.preventDefault();
             e.stopPropagation();
             saveState();
             sticker.remove();
         };
 
-        sticker.querySelector('.kd-sticker-delete').addEventListener('mousedown', (e) => e.stopPropagation());
-        sticker.querySelector('.kd-sticker-delete').addEventListener('click', deleteHandler);
-        sticker.querySelector('.kd-sticker-delete').addEventListener('touchstart', (e) => {
-            e.stopPropagation();
-            if (e.cancelable) e.preventDefault();
-            deleteHandler(e);
-        }, { passive: false });
+        deleteBtn.addEventListener('click', performDelete);
+        deleteBtn.addEventListener('touchstart', performDelete, { passive: false });
+        deleteBtn.addEventListener('mousedown', (e) => e.stopPropagation());
 
         makeDraggableAndResizable(sticker);
     }

@@ -31,26 +31,39 @@ document.addEventListener('DOMContentLoaded', async () => {
     const unlockChars = document.querySelectorAll('.kd-unlock-char');
     const secretSequence = ['清', '清', '白', '白', '清', '清', '白', '白'];
     let secretIndex = 0;
+    let sequenceTimer = null;
+
+    const handleUnlockTap = (el, char) => {
+        // Visual feedback
+        el.classList.add('active-tap');
+        setTimeout(() => el.classList.remove('active-tap'), 200);
+
+        // Reset if no activity for 3s
+        clearTimeout(sequenceTimer);
+        sequenceTimer = setTimeout(() => {
+            secretIndex = 0;
+            console.log('Sequence reset due to timeout');
+        }, 3000);
+
+        if (char === secretSequence[secretIndex]) {
+            secretIndex++;
+            if (secretIndex === secretSequence.length) {
+                unlockAdmin();
+                secretIndex = 0;
+                clearTimeout(sequenceTimer);
+            }
+        } else {
+            // Check if user is starting over
+            secretIndex = (char === secretSequence[0]) ? 1 : 0;
+        }
+    };
 
     unlockChars.forEach(el => {
-        const handleUnlockTap = (e) => {
-            const char = el.getAttribute('data-char');
-            if (char === secretSequence[secretIndex]) {
-                secretIndex++;
-                if (secretIndex === secretSequence.length) {
-                    unlockAdmin();
-                    secretIndex = 0;
-                }
-            } else {
-                // Reset if wrong char (but allow starting over if match the first char)
-                secretIndex = (char === secretSequence[0]) ? 1 : 0;
-            }
-        };
-
-        el.addEventListener('click', handleUnlockTap);
-        el.addEventListener('touchstart', (e) => {
-            handleUnlockTap(e);
-        }, { passive: true });
+        // Use pointerdown for fastest response on both mouse and touch
+        el.addEventListener('pointerdown', (e) => {
+            e.preventDefault();
+            handleUnlockTap(el, el.getAttribute('data-char'));
+        });
     });
 
     function unlockAdmin() {
