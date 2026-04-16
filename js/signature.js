@@ -124,8 +124,10 @@ document.addEventListener('DOMContentLoaded', () => {
             sticker.remove();
         };
 
+        sticker.querySelector('.kd-sticker-delete').addEventListener('mousedown', (e) => e.stopPropagation());
         sticker.querySelector('.kd-sticker-delete').addEventListener('click', deleteHandler);
         sticker.querySelector('.kd-sticker-delete').addEventListener('touchstart', (e) => {
+            e.stopPropagation();
             if (e.cancelable) e.preventDefault();
             deleteHandler(e);
         }, { passive: false });

@@ -27,6 +27,32 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
     });
 
+    // Mobile Admin Unlock: Click '清', '清', '白', '白' sequence twice
+    const unlockChars = document.querySelectorAll('.kd-unlock-char');
+    const secretSequence = ['清', '清', '白', '白', '清', '清', '白', '白'];
+    let secretIndex = 0;
+
+    unlockChars.forEach(el => {
+        const handleUnlockTap = (e) => {
+            const char = el.getAttribute('data-char');
+            if (char === secretSequence[secretIndex]) {
+                secretIndex++;
+                if (secretIndex === secretSequence.length) {
+                    unlockAdmin();
+                    secretIndex = 0;
+                }
+            } else {
+                // Reset if wrong char (but allow starting over if match the first char)
+                secretIndex = (char === secretSequence[0]) ? 1 : 0;
+            }
+        };
+
+        el.addEventListener('click', handleUnlockTap);
+        el.addEventListener('touchstart', (e) => {
+            handleUnlockTap(e);
+        }, { passive: true });
+    });
+
     function unlockAdmin() {
         document.body.classList.add('admin-mode-active');
         const notification = document.createElement('div');
@@ -104,8 +130,17 @@ document.addEventListener('DOMContentLoaded', async () => {
                    <button class="kd-delete-sig" title="刪除"><span class="material-icons">close</span></button>
                 </div>
             `;
-            card.querySelector('.kd-print-sig').addEventListener('click', () => printSignature(sig.image_url));
-            card.querySelector('.kd-delete-sig').addEventListener('click', () => deleteSignature(sig.id, sig.image_url));
+            const printBtn = card.querySelector('.kd-print-sig');
+            const deleteBtn = card.querySelector('.kd-delete-sig');
+
+            const handlePrint = (e) => { e.stopPropagation(); printSignature(sig.image_url); };
+            const handleDelete = (e) => { e.stopPropagation(); deleteSignature(sig.id, sig.image_url); };
+
+            printBtn.addEventListener('click', handlePrint);
+            printBtn.addEventListener('touchstart', (e) => { if (e.cancelable) e.preventDefault(); handlePrint(e); }, {passive: false});
+
+            deleteBtn.addEventListener('click', handleDelete);
+            deleteBtn.addEventListener('touchstart', (e) => { if (e.cancelable) e.preventDefault(); handleDelete(e); }, {passive: false});
             wallContainer.appendChild(card);
         });
     }
