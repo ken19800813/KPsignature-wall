@@ -8,72 +8,45 @@ document.addEventListener('DOMContentLoaded', async () => {
     
     let currentMinWidth = 350; 
 
-    // Konami Code Logic
-    const konamiCode = ['ArrowUp', 'ArrowUp', 'ArrowDown', 'ArrowDown', 'ArrowLeft', 'ArrowRight', 'ArrowLeft', 'ArrowRight', 'keyb', 'keya'];
-    let konamiIndex = 0;
+    // --- Security Module Start (Obfuscated) ---
+    (function() {
+        const _0x1f2 = (n, k) => String.fromCharCode(n ^ k);
+        const _0x3d2 = [0x6e9a, 0x6e9a, 0x6f0f, 0x6f0f, 0x6e9a, 0x6e9a, 0x6f0f, 0x6f0f];
+        const _0x5e1 = ["\x41\x72\x72\x6f\x77\x55\x70", "\x41\x72\x72\x6f\x77\x44\x6f\x77\x6e", "\x41\x72\x72\x6f\x77\x4c\x65\x66\x74", "\x41\x72\x72\x6f\x77\x52\x69\x67\x68\x74", "\x6b\x65\x79\x62", "\x6b\x65\x79\x61"];
+        const _0x992 = [0, 0, 1, 1, 2, 3, 2, 3, 4, 5].map(i => _0x5e1[i]);
+        let _0xidx = 0, _0xtidx = 0, _0xtmr = null;
 
-    window.addEventListener('keydown', (e) => {
-        const key = e.key.toLowerCase();
-        let currentTarget = konamiCode[konamiIndex];
-        let match = (currentTarget.startsWith('key')) ? (key === currentTarget.replace('key', '')) : (e.key === currentTarget);
-        if (match) {
-            konamiIndex++;
-            if (konamiIndex === konamiCode.length) {
-                unlockAdmin();
-                konamiIndex = 0;
-            }
-        } else {
-            konamiIndex = (e.key === konamiCode[0]) ? 1 : 0;
-        }
-    });
+        const _0xsec = () => {
+            const _0xcls = 'YWRtaW4tbW9kZS1hY3RpdmU=';
+            document.body.classList.add(atob(_0xcls));
+            const _0xnot = document.createElement('div');
+            _0xnot.className = 'kd-notification';
+            _0xnot.innerHTML = '\uD83D\uDD13 \u7BA1\u7406\u9650\u6B0A\u5DF2\u89E3\u9664';
+            document.body.appendChild(_0xnot);
+            setTimeout(() => _0xnot.remove(), 3000);
+        };
 
-    // Mobile Admin Unlock: Click '清', '清', '白', '白' sequence twice
-    const unlockChars = document.querySelectorAll('.kd-unlock-char');
-    const secretSequence = ['清', '清', '白', '白', '清', '清', '白', '白'];
-    let secretIndex = 0;
-    let sequenceTimer = null;
-
-    const handleUnlockTap = (el, char) => {
-        // Visual feedback
-        el.classList.add('active-tap');
-        setTimeout(() => el.classList.remove('active-tap'), 200);
-
-        // Reset if no activity for 3s
-        clearTimeout(sequenceTimer);
-        sequenceTimer = setTimeout(() => {
-            secretIndex = 0;
-            console.log('Sequence reset due to timeout');
-        }, 3000);
-
-        if (char === secretSequence[secretIndex]) {
-            secretIndex++;
-            if (secretIndex === secretSequence.length) {
-                unlockAdmin();
-                secretIndex = 0;
-                clearTimeout(sequenceTimer);
-            }
-        } else {
-            // Check if user is starting over
-            secretIndex = (char === secretSequence[0]) ? 1 : 0;
-        }
-    };
-
-    unlockChars.forEach(el => {
-        // Use pointerdown for fastest response on both mouse and touch
-        el.addEventListener('pointerdown', (e) => {
-            e.preventDefault();
-            handleUnlockTap(el, el.getAttribute('data-char'));
+        window.addEventListener('keydown', (e) => {
+            const _0xk = e.key.toLowerCase();
+            const _0xt = _0x992[_0xidx];
+            if ((_0xt.startsWith('key') ? (_0xk === _0xt.slice(3)) : (e.key === _0xt))) {
+                _0xidx++; if (_0xidx === _0x992.length) { _0xsec(); _0xidx = 0; }
+            } else { _0xidx = (e.key === _0x992[0] ? 1 : 0); }
         });
-    });
 
-    function unlockAdmin() {
-        document.body.classList.add('admin-mode-active');
-        const notification = document.createElement('div');
-        notification.className = 'kd-notification';
-        notification.innerHTML = '🔓 管理限權已解除';
-        document.body.appendChild(notification);
-        setTimeout(() => notification.remove(), 3000);
-    }
+        document.querySelectorAll('.kd-unlock-char').forEach(_0xce => {
+            _0xce.addEventListener('pointerdown', (e) => {
+                e.preventDefault();
+                _0xce.classList.add('active-tap');
+                setTimeout(() => _0xce.classList.remove('active-tap'), 200);
+                clearTimeout(_0xtmr); _0xtmr = setTimeout(() => { _0xtidx = 0; }, 3000);
+                if (_0xce.getAttribute('data-char') === _0x1f2(_0x3d2[_0xtidx], 0)) {
+                    _0xtidx++; if (_0xtidx === _0x3d2.length) { _0xsec(); _0xtidx = 0; }
+                } else { _0xtidx = (_0xce.getAttribute('data-char') === _0x1f2(_0x3d2[0], 0) ? 1 : 0); }
+            });
+        });
+    })();
+    // --- Security Module End ---
 
     // Slider Zoom Logic
     zoomSlider.addEventListener('input', (e) => {
