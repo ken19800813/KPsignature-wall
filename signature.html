@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Innergie | 高端電子簽名系統</title>
+    <!-- Noto Sans for extreme clarity -->
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <link rel="stylesheet" href="css/kendesign.css">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="js/supabase-config.js"></script>
+</head>
+<body class="kd-app-glass-v5">
+    <div class="kd-sig-v6-wrapper">
+        <header class="kd-header kd-header-v6">
+            <a href="index.html" class="kd-back-btn">
+                <span class="material-icons">chevron_left</span>
+            </a>
+            <h1 class="kd-header-title">電子墨寶</h1>
+        </header>
+
+        <main class="kd-flex-1 kd-flex-col kd-align-center kd-justify-center kd-p-20 kd-sig-main-content">
+            <!-- Sticker Picker (Hidden by default) -->
+            <div id="sticker-picker" class="kd-sticker-picker">
+                <!-- Dynamically filled or static -->
+                <div class="kd-sticker-item" data-src="images/01.gif"><img src="images/01.gif" alt="s1"></div>
+                <div class="kd-sticker-item" data-src="images/02.gif"><img src="images/02.gif" alt="s2"></div>
+                <div class="kd-sticker-item" data-src="images/03.gif"><img src="images/03.gif" alt="s3"></div>
+                <div class="kd-sticker-item" data-src="images/04.gif"><img src="images/04.gif" alt="s4"></div>
+                <div class="kd-sticker-item" data-src="images/05.gif"><img src="images/05.gif" alt="s5"></div>
+                <div class="kd-sticker-item" data-src="images/06.gif"><img src="images/06.gif" alt="s6"></div>
+                <div class="kd-sticker-item" data-src="images/07.gif"><img src="images/07.gif" alt="s7"></div>
+                <div class="kd-sticker-item" data-src="images/08.gif"><img src="images/08.gif" alt="s8"></div>
+                <div class="kd-sticker-item" data-src="images/09.gif"><img src="images/09.gif" alt="s9"></div>
+                <div class="kd-sticker-item" data-src="images/11.gif"><img src="images/11.gif" alt="s11"></div>
+                <div class="kd-sticker-item" data-src="images/12.gif"><img src="images/12.gif" alt="s12"></div>
+                <div class="kd-sticker-item" data-src="images/13.gif"><img src="images/13.gif" alt="s13"></div>
+            </div>
+            <!-- Brush Settings - Premium Floating Bar -->
+            <div class="kd-signature-settings-v6 kd-m-bottom-20 kd-flex kd-align-center kd-justify-center kd-gap-16">
+                <!-- Group 1: Width & Color -->
+                <div class="kd-flex kd-align-center kd-gap-16">
+                    <div class="kd-setting-group">
+                        <span class="kd-setting-label kd-text-primary">寬度</span>
+                        <input type="range" id="brush-size" class="kd-range-input kd-w-80" min="1" max="12" value="4">
+                    </div>
+                    <div class="kd-setting-group">
+                        <div class="kd-color-picker-wrap">
+                            <input type="color" id="brush-color" class="kd-input-color-v6" value="#1B3969">
+                            <span id="color-hex" class="kd-color-hex-label-v6">#1B3969</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Vertical Divider (Visual only) -->
+                <div class="kd-divider"></div>
+
+                <!-- Group 2: Tools (Undo, Eraser, Sticker) -->
+                <div class="kd-flex kd-gap-8">
+                    <button id="undo-btn" class="kd-btn-mini kd-flex-center kd-btn-tool" title="復原">
+                        <span class="material-icons">undo</span>
+                    </button>
+                    <button id="eraser-btn" class="kd-btn-mini kd-flex-center kd-btn-tool" title="橡皮擦">
+                        <span class="material-icons">auto_fix_normal</span>
+                    </button>
+                    <button id="sticker-toggle" class="kd-btn-mini kd-flex-center kd-btn-tool" title="貼圖">
+                        <span class="material-icons">face</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- THE 4:3 CANVAS CONTAINER - STRICT -->
+            <div class="kd-canvas-absolute-43">
+                <canvas id="signature-canvas"></canvas>
+            </div>
+
+            <p class="kd-v6-item-label kd-m-top-15 kd-v6-item-label-spaced">SIGN HERE / 請在此區域提筆</p>
+        </main>
+
+        <!-- Anchored Footer -->
+        <footer class="kd-p-20 kd-m-bottom-20 kd-w-100 kd-max-w-500 kd-self-center">
+            <div class="kd-signature-controls kd-signature-controls-v6">
+                <button id="clear-btn" class="kd-btn-glass kd-flex-1 kd-btn-radius-20">
+                    <span class="material-icons kd-opacity-50">refresh</span>
+                    重寫
+                </button>
+                <button id="save-btn" class="kd-btn-glass primary kd-flex-1 kd-btn-radius-20">
+                    <span class="material-icons">check_circle</span>
+                    確認送出
+                </button>
+            </div>
+        </footer>
+    </div>
+
+    <!-- Loading Overlay -->
+    <div id="loading-overlay" class="kd-loading-overlay kd-invisible">
+        <div class="kd-spinner"></div>
+        <p>正在上傳至雲端...</p>
+    </div>
+
+    <!-- Logic -->
+    <script src="js/signature.js"></script>
+</body>
+</html>
