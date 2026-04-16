@@ -118,10 +118,17 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         
         container.appendChild(sticker);
-        sticker.querySelector('.kd-sticker-delete').addEventListener('click', () => {
+        const deleteHandler = (e) => {
+            e.stopPropagation();
             saveState();
             sticker.remove();
-        });
+        };
+
+        sticker.querySelector('.kd-sticker-delete').addEventListener('click', deleteHandler);
+        sticker.querySelector('.kd-sticker-delete').addEventListener('touchstart', (e) => {
+            if (e.cancelable) e.preventDefault();
+            deleteHandler(e);
+        }, { passive: false });
 
         makeDraggableAndResizable(sticker);
     }
@@ -132,6 +139,9 @@ document.addEventListener('DOMContentLoaded', () => {
         let startX, startY, startW, startH, startL, startT;
 
         const onStart = (e) => {
+            const isDeleteBtn = e.target.closest('.kd-sticker-delete');
+            if (isDeleteBtn) return; // 不要攔截刪除按鈕
+
             saveState();
             const clientX = e.touches ? e.touches[0].clientX : e.clientX;
             const clientY = e.touches ? e.touches[0].clientY : e.clientY;
