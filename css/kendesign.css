@@ -463,6 +463,25 @@ body {
     font-family: monospace;
 }
 
+.kd-name-input-wrap {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: rgba(255, 255, 255, 0.8);
+    padding: 12px 20px;
+    border-radius: 30px;
+    border: 1px solid rgba(0,0,0,0.1);
+    margin-top: 15px;
+}
+
+.kd-glass-input {
+    border: none;
+    background: transparent;
+    width: 100%;
+    font-size: 16px;
+    outline: none;
+}
+
 /* --- Signature Canvas --- */
 .kd-canvas-absolute-43 {
     width: min(90vw, calc(60vh * 4 / 3)); 
@@ -672,4 +691,68 @@ body {
     background: rgba(255,255,255,0.2);
     border-radius: 20px;
     border: 1px dashed rgba(0,0,0,0.1);
+}
+
+/* Guest Name Input Styles */
+.kd-name-input-wrap {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    background: rgba(255, 255, 255, 0.4);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.5);
+    border-radius: 30px;
+    padding: 8px 20px;
+    width: 320px;
+    margin-left: auto;
+    margin-right: auto;
+    transition: all 0.3s;
+}
+
+.kd-name-input-wrap:focus-within {
+    background: rgba(255, 255, 255, 0.8);
+    border-color: var(--kd-primary-blue);
+    box-shadow: 0 4px 15px rgba(40, 200, 200, 0.2);
+    width: 350px;
+}
+
+.kd-name-input-wrap .material-icons {
+    color: var(--kd-primary-blue);
+    font-size: 20px;
+}
+
+.kd-glass-input {
+    background: transparent;
+    border: none;
+    outline: none;
+    flex: 1;
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--kd-dark-blue);
+}
+
+.kd-glass-input::placeholder {
+    color: var(--kd-text-muted);
+    font-size: 13px;
+    font-weight: 400;
+}
+
+/* Dual Column Meta */
+.kd-sig-meta-v2 {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 8px;
+    padding: 0 4px;
+}
+
+.kd-sig-name {
+    font-size: 12px;
+    font-weight: 900;
+    color: var(--kd-primary-blue);
+}
+
+.kd-sig-date {
+    font-size: 10px;
+    color: var(--kd-text-muted);
 }

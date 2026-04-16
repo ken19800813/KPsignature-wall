@@ -1,4 +1,8 @@
 document.addEventListener('DOMContentLoaded', async () => {
+    // 【自動清空指令】強制清空本地舊資料，確保只讀取雲端
+    localStorage.clear();
+    console.log('Local storage cleared for cloud migration.');
+
     const wallContainer = document.getElementById('signature-wall');
     const zoomSlider = document.getElementById('zoom-slider');
     
@@ -44,7 +48,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     // --- SUPABASE FETCH ---
     async function fetchSignatures() {
-        wallContainer.innerHTML = '<div class="kd-wall-loading"><p>正在從雲端載入墨寶牆...</p></div>';
+        wallContainer.innerHTML = '<div class="kd-wall-loading"><p>正在從雲端載入簽名牆...</p></div>';
         
         try {
             const { data, error } = await _supabase
@@ -66,7 +70,7 @@ document.addEventListener('DOMContentLoaded', async () => {
         wallContainer.innerHTML = '';
 
         if (!signatures || signatures.length === 0) {
-            wallContainer.innerHTML = '<p class="kd-empty-state">目前尚無雲端墨寶，期待您成為第一位！</p>';
+            wallContainer.innerHTML = '<p class="kd-empty-state">目前尚無簽名，期待您成為第一位！</p>';
             return;
         }
 
@@ -80,12 +84,21 @@ document.addEventListener('DOMContentLoaded', async () => {
 
         wallContainer.classList.add('kd-signature-wall-dense');
         signatures.forEach(sig => {
-            const date = new Date(sig.created_at).toLocaleString();
+            const date = new Date(sig.created_at).toLocaleString('zh-TW', {
+                month: 'numeric',
+                day: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+            const displayName = sig.display_name || '嘉賓 / Guest';
             const card = document.createElement('div');
             card.className = 'kd-sig-card-small kd-sig-card';
             card.innerHTML = `
                 <img src="${sig.image_url}" class="kd-sig-img" alt="Signature">
-                <div class="kd-sig-meta">${date}</div>
+                <div class="kd-sig-meta-v2">
+                    <span class="kd-sig-name">${displayName}</span>
+                    <span class="kd-sig-date">${date}</span>
+                </div>
                 <div class="kd-sig-admin-tools">
                    <button class="kd-print-sig" title="列印"><span class="material-icons">print</span></button>
                    <button class="kd-delete-sig" title="刪除"><span class="material-icons">close</span></button>
@@ -104,28 +117,43 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     async function deleteSignature(id, imageUrl) {
-        if (!confirm('確定要永久刪除此墨寶嗎？\n(這將同步移除雲端圖檔)')) return;
+        if (!confirm('確定要永久刪除此簽名嗎？\n(這將同步移除雲端圖檔)')) return;
         
         try {
-            // 1. Delete from DB
+            console.log('正在刪除 ID:', id);
+
+            // 1. 先從資料庫刪除紀錄
             const { error: dbError } = await _supabase
                 .from('signatures')
                 .delete()
                 .eq('id', id);
 
-            if (dbError) throw dbError;
+            if (dbError) {
+                console.error('資料庫刪除失敗:', dbError);
+                throw new Error('資料庫存取失敗: ' + dbError.message);
+            }
 
-            // 2. Delete from Storage (Extract filename from URL)
-            const fileName = imageUrl.split('/').pop();
-            const { error: storageError } = await _supabase.storage
-                .from('signatures')
-                .remove([fileName]);
+            // 2. 判斷是否為雲端網址，如果是才去刪除實體檔案
+            if (imageUrl && imageUrl.includes('supabase.co')) {
+                const fileName = imageUrl.split('/').pop();
+                console.log('正在嘗試刪除雲端檔案:', fileName);
+                
+                const { error: storageError } = await _supabase.storage
+                    .from('signatures')
+                    .remove([fileName]);
 
-            // Note: storageError might fail if policy isn't set, but we continue.
+                if (storageError) {
+                    console.warn('雲端檔案刪除失敗（可能權限不足），但資料紀錄已移除:', storageError);
+                }
+            } else {
+                console.log('偵測為本地舊資料，僅移除畫面顯示');
+            }
+
+            // 成功後重新載入
             fetchSignatures();
         } catch (err) {
-            console.error('Delete failed:', err);
-            alert('刪除失敗，請檢查權限設定：' + err.message);
+            console.error('刪除程序發生錯誤:', err);
+            alert('刪除失敗，錯誤原因：' + err.message);
         }
     }
 

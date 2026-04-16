@@ -243,6 +243,21 @@ document.addEventListener('DOMContentLoaded', () => {
         document.querySelectorAll('.kd-placed-sticker').forEach(s => s.remove());
     });
 
+    // --- Keyboard Shortcuts ---
+    window.addEventListener('keydown', (e) => {
+        const isMac = navigator.platform.toUpperCase().indexOf('MAC') >= 0;
+        const modifier = isMac ? e.metaKey : e.ctrlKey;
+        
+        if (modifier && e.key.toLowerCase() === 'z') {
+            e.preventDefault();
+            undo();
+        }
+        if (modifier && e.key.toLowerCase() === 'k') {
+            e.preventDefault();
+            clearBtn.click();
+        }
+    });
+
     canvas.addEventListener('touchstart', (e) => { e.preventDefault(); startDrawing(e); }, { passive: false });
     canvas.addEventListener('touchmove', (e) => { e.preventDefault(); draw(e); }, { passive: false });
     canvas.addEventListener('touchend', stopDrawing);
@@ -309,10 +324,16 @@ document.addEventListener('DOMContentLoaded', () => {
                 .from('signatures')
                 .getPublicUrl(fileName);
 
+            // Get Guest Name
+            const guestName = document.getElementById('guest-name').value.trim() || '嘉賓 / Guest';
+
             // 4. Insert into Database
             const { error: dbError } = await _supabase
                 .from('signatures')
-                .insert([{ image_url: publicUrl }]);
+                .insert([{ 
+                    image_url: publicUrl,
+                    display_name: guestName 
+                }]);
 
             if (dbError) throw dbError;
 

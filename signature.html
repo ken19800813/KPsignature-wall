@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Innergie | 高端電子簽名系統</title>
+    <title>柯文哲清清白白 線上簽名</title>
     <!-- Noto Sans for extreme clarity -->
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&display=swap" rel="stylesheet">
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
@@ -17,7 +17,7 @@
             <a href="index.html" class="kd-back-btn">
                 <span class="material-icons">chevron_left</span>
             </a>
-            <h1 class="kd-header-title">電子墨寶</h1>
+            <h1 class="kd-header-title">柯文哲清清白白 線上簽名板</h1>
         </header>
 
         <main class="kd-flex-1 kd-flex-col kd-align-center kd-justify-center kd-p-20 kd-sig-main-content">
@@ -75,7 +75,13 @@
                 <canvas id="signature-canvas"></canvas>
             </div>
 
-            <p class="kd-v6-item-label kd-m-top-15 kd-v6-item-label-spaced">SIGN HERE / 請在此區域提筆</p>
+            <!-- Name Input Field -->
+            <div class="kd-name-input-wrap kd-m-top-15">
+                <span class="material-icons">person</span>
+                <input type="text" id="guest-name" class="kd-glass-input" placeholder="請輸入您的姓名 / Please enter your name" maxlength="20">
+            </div>
+
+            <p class="kd-v6-item-label kd-m-top-10 kd-v6-item-label-spaced">SIGN ABOVE / 請在上方區域提筆</p>
         </main>
 
         <!-- Anchored Footer -->
