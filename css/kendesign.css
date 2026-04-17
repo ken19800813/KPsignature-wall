@@ -243,7 +243,7 @@ body {
 
 /* Signature Wall Specific Overrides */
 .kd-wall-v6-padding { padding-bottom: 200px; }
-.kd-wall-header-v6 { padding: 40px 20px 30px; }
+.kd-wall-header-v6 { padding: 10px 20px 10px; }
 .kd-wall-decoration-line { width: 40px; height: 3px; background: #28c8c8; margin: 0 auto 10px; border-radius: 2px; }
 .kd-wall-grid-padding { padding: 0 30px 40px; }
 
@@ -790,4 +790,9 @@ body {
 .kd-sig-date {
     font-size: 10px;
     color: var(--kd-text-muted);
+}
+
+#photo-btn.active {
+    background: var(--kd-primary-blue);
+    color: white;
 }
