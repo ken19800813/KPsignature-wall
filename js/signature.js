@@ -627,11 +627,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
             if (dbError) throw dbError;
 
-            // 暫時關閉跳轉，方便查看 Console 除錯
-            alert('送出成功！(為了除錯，暫時關閉自動跳轉，請檢查 Console)');
-            // window.location.href = 'index.html'; 
+            window.location.href = 'index.html'; 
         } catch (err) {
-            console.error('Upload failed:', err);
             alert('上傳失敗：' + err.message);
         } finally {
             if (loadingOverlay) loadingOverlay.classList.add('kd-invisible');
