@@ -228,7 +228,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 {"is_malicious": boolean, "reason": "說明攔截原因 (例如：偵測到針對特定對象的攻擊性詞彙)"}
             `;
 
-            const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${FINAL_KEY}`, {
+            const response = await fetch(`https://generativelanguage.googleapis.com/v1/models/gemini-2.0-flash-lite:generateContent?key=${FINAL_KEY}`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
@@ -238,13 +238,21 @@ document.addEventListener('DOMContentLoaded', () => {
                             { inline_data: { mime_type: "image/jpeg", data: base64Data } }
                         ]
                     }],
-                    generationConfig: { response_mime_type: "application/json" }
+                    // 移除造成 400 錯誤的 generationConfig
                 })
             });
 
             const result = await response.json();
+            console.log('AI 審核原始回應:', result);
+
+            if (result.error) {
+                console.error('Gemini API 報錯:', result.error.message);
+                return true; // Key 可能有問題，暫時放行
+            }
+
             const responseText = result.candidates[0].content.parts[0].text;
             const evalResult = JSON.parse(responseText);
+            console.log('AI 判定結果:', evalResult);
 
             if (evalResult.is_malicious) {
                 alert(`【系統提醒】內容審核未通過：\n${evalResult.reason}\n\n請保持理性並重新編輯您的簽名，謝謝您的協助。`);
@@ -255,7 +263,6 @@ document.addEventListener('DOMContentLoaded', () => {
             return true;
         } catch (e) {
             console.error('AI 審核發生異常:', e);
-            // 異常時預設放行，避免造成使用者體驗斷點
             return true; 
         }
     }
@@ -620,7 +627,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
             if (dbError) throw dbError;
 
-            window.location.href = 'index.html';
+            // 暫時關閉跳轉，方便查看 Console 除錯
+            alert('送出成功！(為了除錯，暫時關閉自動跳轉，請檢查 Console)');
+            // window.location.href = 'index.html'; 
         } catch (err) {
             console.error('Upload failed:', err);
             alert('上傳失敗：' + err.message);
