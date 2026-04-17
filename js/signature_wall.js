@@ -7,6 +7,27 @@ document.addEventListener('DOMContentLoaded', async () => {
     const zoomSlider = document.getElementById('zoom-slider');
     
     let currentMinWidth = 350; 
+    
+    // --- View Tracking ---
+    async function trackVisit() {
+        try {
+            await _supabase.from('page_views').insert([{ page: 'wall' }]);
+        } catch (e) {
+            console.warn('View tracking log failed. Make sure "page_views" table exists.');
+        }
+    }
+    trackVisit(); // Log visit on load
+
+    async function getVisitCount() {
+        try {
+            const { count, error } = await _supabase
+                .from('page_views')
+                .select('*', { count: 'exact', head: true });
+            return error ? '---' : count;
+        } catch (e) {
+            return '---';
+        }
+    }
 
     // --- Security Module Start (Obfuscated) ---
     (function() {
@@ -16,14 +37,35 @@ document.addEventListener('DOMContentLoaded', async () => {
         const _0x992 = [0, 0, 1, 1, 2, 3, 2, 3, 4, 5].map(i => _0x5e1[i]);
         let _0xidx = 0, _0xtidx = 0, _0xtmr = null;
 
-        const _0xsec = () => {
+        const _0xsec = async () => {
             const _0xcls = 'YWRtaW4tbW9kZS1hY3RpdmU=';
             document.body.classList.add(atob(_0xcls));
+            
+            // Fetch the count
+            const viewCount = await getVisitCount();
+            
             const _0xnot = document.createElement('div');
             _0xnot.className = 'kd-notification';
-            _0xnot.innerHTML = '\uD83D\uDD13 \u7BA1\u7406\u9650\u6B0A\u5DF2\u89E3\u9664';
+            _0xnot.style.display = 'flex';
+            _0xnot.style.flexDirection = 'column';
+            _0xnot.style.alignItems = 'center';
+            _0xnot.style.gap = '4px';
+            
+            _0xnot.innerHTML = `
+                <div style="display:flex;align-items:center;gap:8px;">
+                    <span class="material-icons" style="font-size:18px;">lock_open</span>
+                    <span>管理權限已解除</span>
+                </div>
+                <div style="font-size:12px;opacity:0.8;font-weight:normal;letter-spacing:1px;border-top:1px solid rgba(255,255,255,0.2);padding-top:4px;margin-top:2px;">
+                    📊 累計網頁瀏覽人次：${viewCount}
+                </div>
+            `;
             document.body.appendChild(_0xnot);
-            setTimeout(() => _0xnot.remove(), 3000);
+            setTimeout(() => {
+                _0xnot.style.opacity = '0';
+                _0xnot.style.transition = 'opacity 0.5s ease';
+                setTimeout(() => _0xnot.remove(), 500);
+            }, 4000);
         };
 
         window.addEventListener('keydown', (e) => {
