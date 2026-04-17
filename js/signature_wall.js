@@ -5,8 +5,12 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     const wallContainer = document.getElementById('signature-wall');
     const zoomSlider = document.getElementById('zoom-slider');
+    const searchNameInput = document.getElementById('search-name');
+    const searchNoInput = document.getElementById('search-no');
+    const searchBtn = document.getElementById('btn-search');
     
     let currentMinWidth = 350; 
+    let allSignaturesData = []; 
     
     // --- View Tracking ---
     async function trackVisit() {
@@ -111,12 +115,19 @@ document.addEventListener('DOMContentLoaded', async () => {
                 .order('created_at', { ascending: false });
 
             if (error) throw error;
+            allSignaturesData = data;
             renderWall(data);
         } catch (err) {
             console.error('Fetch failed:', err);
             // Fallback to local storage if offline or failed
             const localSignatures = JSON.parse(localStorage.getItem('signatures') || '[]');
-            renderWall(localSignatures.map(s => ({ id: s.id, image_url: s.image, created_at: s.date })));
+            allSignaturesData = localSignatures.map(s => ({ 
+                id: s.id, 
+                image_url: s.image, 
+                created_at: s.date,
+                display_name: s.display_name 
+            }));
+            renderWall(allSignaturesData);
         }
     }
 
@@ -137,7 +148,9 @@ document.addEventListener('DOMContentLoaded', async () => {
         }
 
         wallContainer.classList.add('kd-signature-wall-dense');
-        signatures.forEach(sig => {
+        const totalCount = signatures.length;
+        signatures.forEach((sig, index) => {
+            const seqNo = totalCount - index; // 最新的是最後一號，最舊的是 1 號
             const date = new Date(sig.created_at).toLocaleString('zh-TW', {
                 month: 'numeric',
                 day: 'numeric',
@@ -147,7 +160,11 @@ document.addEventListener('DOMContentLoaded', async () => {
             const displayName = sig.display_name || '嘉賓 / Guest';
             const card = document.createElement('div');
             card.className = 'kd-sig-card-small kd-sig-card';
+            card.setAttribute('data-seq', seqNo);
+            card.setAttribute('data-name', displayName.toLowerCase());
+            
             card.innerHTML = `
+                <div class="kd-sig-number">#${seqNo}</div>
                 <img src="${sig.image_url}" class="kd-sig-img" alt="Signature">
                 <div class="kd-sig-meta-v2">
                     <span class="kd-sig-name">${displayName}</span>
@@ -218,6 +235,43 @@ document.addEventListener('DOMContentLoaded', async () => {
             console.error('刪除程序發生錯誤:', err);
             alert('刪除失敗，錯誤原因：' + err.message);
         }
+    }
+
+    // --- Search Functionality ---
+    function performSearch() {
+        const nameQuery = searchNameInput.value.trim().toLowerCase();
+        const noQuery = searchNoInput.value.trim().replace('#', '');
+        
+        const cards = document.querySelectorAll('.kd-sig-card');
+        let foundCard = null;
+
+        // 清除舊的高亮
+        cards.forEach(c => c.classList.remove('kd-sig-highlight'));
+
+        if (noQuery) {
+            foundCard = Array.from(cards).find(c => c.getAttribute('data-seq') === noQuery);
+        } else if (nameQuery) {
+            foundCard = Array.from(cards).find(c => c.getAttribute('data-name').includes(nameQuery));
+        }
+
+        if (foundCard) {
+            foundCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            foundCard.classList.add('kd-sig-highlight');
+            
+            // 3秒後自動移除高亮，保持版面整潔 (選用)
+            // setTimeout(() => foundCard.classList.remove('kd-sig-highlight'), 5000);
+        } else {
+            alert('找不到符合條件的簽名。');
+        }
+    }
+
+    if (searchBtn) {
+        searchBtn.addEventListener('click', performSearch);
+        [searchNameInput, searchNoInput].forEach(input => {
+            input.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') performSearch();
+            });
+        });
     }
 
     updateZoom(); 
