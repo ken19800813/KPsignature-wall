@@ -22,6 +22,27 @@ document.addEventListener('DOMContentLoaded', () => {
     let undoStack = [];
     let isEraser = false;
 
+    // --- Premium notification ---
+    function showNotification(msg) {
+        // Remove existing ones to prevent stacking
+        const existing = document.querySelectorAll('.kd-notification');
+        existing.forEach(el => el.remove());
+
+        const notif = document.createElement('div');
+        notif.className = 'kd-notification';
+        notif.textContent = msg;
+        document.body.appendChild(notif);
+        
+        // Auto remove
+        setTimeout(() => {
+            if (notif.parentNode) {
+                notif.style.opacity = '0';
+                notif.style.transition = 'opacity 0.5s ease';
+                setTimeout(() => notif.remove(), 500);
+            }
+        }, 3000);
+    }
+
     // --- State Management ---
     function saveState() {
         const stickersData = Array.from(document.querySelectorAll('.kd-placed-sticker')).map(el => ({
@@ -387,7 +408,24 @@ document.addEventListener('DOMContentLoaded', () => {
     saveBtn.addEventListener('click', async () => {
         const guestName = document.getElementById('guest-name').value.trim();
         if (!guestName) {
-            alert('請輸入您的姓名後再送出哦！');
+            showNotification('請輸入您的姓名後再送出哦！');
+            return;
+        }
+
+        // Check if there's any content on the board
+        const stickers = document.querySelectorAll('.kd-placed-sticker');
+        const pixelData = ctx.getImageData(0, 0, canvas.width, canvas.height).data;
+        let isCanvasDirty = false;
+        // Check if any pixel has been drawn (alpha > 0)
+        for (let i = 0; i < pixelData.length; i += 4) {
+            if (pixelData[i + 3] > 0) {
+                isCanvasDirty = true;
+                break;
+            }
+        }
+
+        if (stickers.length === 0 && !isCanvasDirty) {
+            showNotification('簽名板上還沒有內容喔，請簽名或加入貼圖！');
             return;
         }
 
