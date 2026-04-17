@@ -293,14 +293,30 @@ document.addEventListener('DOMContentLoaded', () => {
             sticker.style.top = savedData.top;
             sticker.style.width = savedData.width;
             sticker.style.height = savedData.height;
-        } else {
-            sticker.style.left = (container.clientWidth / 2 - 60) + 'px';
-            sticker.style.top = (container.clientHeight / 2 - 45) + 'px';
-            sticker.style.width = '120px';
-            sticker.style.height = '120px';
         }
-        
+
         container.appendChild(sticker);
+        
+        // Dynamic Aspect Ratio Handling
+        const img = sticker.querySelector('img');
+        img.onload = () => {
+            if (!savedData) {
+                const naturalRatio = img.naturalWidth / img.naturalHeight;
+                const baseSize = 140; // Target placement size
+                
+                if (naturalRatio >= 1) { // Landscape or Square
+                    sticker.style.width = baseSize + 'px';
+                    sticker.style.height = (baseSize / naturalRatio) + 'px';
+                } else { // Portrait
+                    sticker.style.height = baseSize + 'px';
+                    sticker.style.width = (baseSize * naturalRatio) + 'px';
+                }
+                
+                // Recentering after size calculation
+                sticker.style.left = (container.clientWidth / 2 - sticker.offsetWidth / 2) + 'px';
+                sticker.style.top = (container.clientHeight / 2 - sticker.offsetHeight / 2) + 'px';
+            }
+        };
         
         const deleteBtn = sticker.querySelector('.kd-sticker-delete');
         const performDelete = (e) => {
