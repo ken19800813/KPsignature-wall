@@ -11,7 +11,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const photoBtn = document.getElementById('photo-btn');
     const photoUpload = document.getElementById('photo-upload');
     const stickerPicker = document.getElementById('sticker-picker');
-    const stickerItems = document.querySelectorAll('.kd-sticker-item');
     const brushSizeInput = document.getElementById('brush-size');
     const brushColorInput = document.getElementById('brush-color');
     const colorHexLabel = document.getElementById('color-hex');
@@ -42,6 +41,54 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         }, 3000);
     }
+
+    // --- Sticker Asset Manager (Central Cache & Negative Cache) ---
+    const StickerAssetManager = {
+        cache: new Set(),
+        negativeCache: JSON.parse(sessionStorage.getItem('sig_sticker_neg_cache') || '[]'),
+        maxId: 50,
+
+        async init(container) {
+            if (!container) return;
+            const fragment = document.createDocumentFragment();
+            const checks = [];
+            
+            for (let i = 1; i <= this.maxId; i++) {
+                const id = i.toString().padStart(2, '0');
+                const path = `images/${id}.gif`;
+                if (!this.negativeCache.includes(path)) {
+                    checks.push(this.verifyAndAppend(id, path, fragment));
+                }
+            }
+            
+            await Promise.all(checks);
+            container.innerHTML = '';
+            container.appendChild(fragment);
+            sessionStorage.setItem('sig_sticker_neg_cache', JSON.stringify(this.negativeCache));
+        },
+
+        async verifyAndAppend(id, path, fragment) {
+            return new Promise(resolve => {
+                const img = new Image();
+                img.onload = () => {
+                    this.cache.add(path);
+                    const item = document.createElement('div');
+                    item.className = 'kd-sticker-item';
+                    item.setAttribute('data-src', path);
+                    item.innerHTML = `<img src="${path}" alt="s${id}">`;
+                    fragment.appendChild(item);
+                    resolve();
+                };
+                img.onerror = () => {
+                    if (!this.negativeCache.includes(path)) {
+                        this.negativeCache.push(path);
+                    }
+                    resolve();
+                };
+                img.src = path;
+            });
+        }
+    };
 
     // --- State Management ---
     function saveState() {
@@ -104,18 +151,26 @@ document.addEventListener('DOMContentLoaded', () => {
     let lastY = 0;
 
     // --- Stickers ---
+    let stickersLoaded = false;
     stickerToggle.addEventListener('click', () => {
         stickerPicker.classList.toggle('active');
         stickerToggle.classList.toggle('active');
+        if (stickerPicker.classList.contains('active') && !stickersLoaded) {
+            StickerAssetManager.init(stickerPicker).then(() => {
+                stickersLoaded = true;
+            });
+        }
     });
 
-    stickerItems.forEach(item => {
-        item.addEventListener('click', () => {
+    // Use Event Delegation for dynamically loaded stickers
+    stickerPicker.addEventListener('click', (e) => {
+        const item = e.target.closest('.kd-sticker-item');
+        if (item) {
             saveState();
             addDraggableSticker(item.getAttribute('data-src'));
             stickerPicker.classList.remove('active');
             stickerToggle.classList.remove('active');
-        });
+        }
     });
 
     // --- Photo Upload ---
