@@ -796,3 +796,44 @@ body {
     background: var(--kd-primary-blue);
     color: white;
 }
+
+/* --- Marquee Footer Styling --- */
+.kd-marquee-footer {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    height: 32px;
+    background: rgba(27, 57, 105, 0.85);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    display: flex;
+    align-items: center;
+    z-index: 9999;
+    overflow: hidden;
+    user-select: none;
+    pointer-events: none;
+}
+
+.kd-marquee-content {
+    white-space: nowrap;
+    display: inline-block;
+    color: white;
+    font-size: 13px;
+    font-weight: 500;
+    letter-spacing: 0.5px;
+    padding-left: 100%;
+    animation: kd-marquee-anim 25s linear infinite;
+}
+
+@keyframes kd-marquee-anim {
+    0% { transform: translateX(0); }
+    100% { transform: translateX(-100%); }
+}
+
+/* Adjust wrapper to prevent footer overlap */
+.kd-sig-v6-wrapper {
+    padding-bottom: 32px;
+}
+
