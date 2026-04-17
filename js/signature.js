@@ -178,6 +178,88 @@ document.addEventListener('DOMContentLoaded', () => {
         photoUpload.click();
     });
 
+    // --- AI Content Moderation ---
+    async function checkMaliceAI(blob, guestName) {
+        // 優先從 js/ai-config.js 讀取 (本地開發)，若無則嘗試從 localStorage 讀取 (線上環境手動設定)
+        let FINAL_KEY = "";
+        if (typeof AI_API_KEY !== 'undefined') {
+            FINAL_KEY = AI_API_KEY;
+        } else {
+            FINAL_KEY = localStorage.getItem('gemini_api_key') || "";
+        }
+        
+        if (!FINAL_KEY) {
+            console.warn('AI 審核功能未啟用 (缺少 API Key)。若在線上環境，可在 Console 輸入 localStorage.setItem("gemini_api_key", "您的Key") 來啟用。');
+            return true; 
+        }
+
+        try {
+            showNotification('AI 正在審核內容安全性...');
+            
+            // 轉換圖片為 Base64
+            const base64Data = await new Promise((resolve) => {
+                const reader = new FileReader();
+                reader.onloadend = () => resolve(reader.result.split(',')[1]);
+                reader.readAsDataURL(blob);
+            });
+
+            const prompt = `
+                任務：嚴格審核手寫簽名板內容，維護平台和諧。
+                使用者姓名：${guestName}
+                圖片內容：包含使用者手寫字跡、貼圖或上傳的照片。
+                
+                【審核標準 - 必須攔截的內容】：
+                1. 針對「柯文哲」的仇恨言論、攻擊性文字或惡意嘲諷。
+                2. 包含以下敏感關鍵字（或含義相近者）：
+                   - 貪污、貪汙、收賄、髒錢
+                   - 17年、十七年 (關於刑期之惡意預測)
+                   - 關、被關、進去蹲、吃牢飯
+                   - 坐牢、監獄、囚犯
+                   - 飛輪、踩飛輪 (具負面連結之惡意調侃)
+                   - 任何形式的粗俗髒話 (如：x、xx、xxx之類)
+                3. 一般性違規：色情內容、商業廣告、色情暗示之圖文。
+                
+                【審核標準 - 應予通過的內容】：
+                - 所有的加油、打氣、祝福文字（例如：柯P加油、清白、支持、平安）。
+                - 無政治相關但具創意、溫暖、正向的塗鴉。
+                
+                請嚴格審查圖片中的手寫文字（OCR）與整體語境。
+                請僅回傳以下格式的 JSON，不要有其他說明文字：
+                {"is_malicious": boolean, "reason": "說明攔截原因 (例如：偵測到針對特定對象的攻擊性詞彙)"}
+            `;
+
+            const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${FINAL_KEY}`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    contents: [{
+                        parts: [
+                            { text: prompt },
+                            { inline_data: { mime_type: "image/jpeg", data: base64Data } }
+                        ]
+                    }],
+                    generationConfig: { response_mime_type: "application/json" }
+                })
+            });
+
+            const result = await response.json();
+            const responseText = result.candidates[0].content.parts[0].text;
+            const evalResult = JSON.parse(responseText);
+
+            if (evalResult.is_malicious) {
+                alert(`【系統提醒】內容審核未通過：\n${evalResult.reason}\n\n請保持理性並重新編輯您的簽名，謝謝您的協助。`);
+                return false;
+            }
+
+            console.log('AI 審核通過');
+            return true;
+        } catch (e) {
+            console.error('AI 審核發生異常:', e);
+            // 異常時預設放行，避免造成使用者體驗斷點
+            return true; 
+        }
+    }
+
     photoUpload.addEventListener('change', (e) => {
         const file = e.target.files[0];
         if (!file) return;
@@ -506,6 +588,13 @@ document.addEventListener('DOMContentLoaded', () => {
             // 1. Capture and Compress the board
             const blob = await captureBoard(false);
             if (!blob) throw new Error('畫布截取失敗');
+
+            // 1.5 AI 視覺審核 (檢查姓名與圖片內容)
+            const isSafe = await checkMaliceAI(blob, guestName);
+            if (!isSafe) {
+                if (loadingOverlay) loadingOverlay.classList.add('kd-invisible');
+                return; // 終止儲存
+            }
 
             const fileName = `sig_${Date.now()}.jpg`;
 
