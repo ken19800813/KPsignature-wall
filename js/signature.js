@@ -8,6 +8,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const undoBtn = document.getElementById('undo-btn');
     const eraserBtn = document.getElementById('eraser-btn');
     const stickerToggle = document.getElementById('sticker-toggle');
+    const photoBtn = document.getElementById('photo-btn');
+    const photoUpload = document.getElementById('photo-upload');
     const stickerPicker = document.getElementById('sticker-picker');
     const stickerItems = document.querySelectorAll('.kd-sticker-item');
     const brushSizeInput = document.getElementById('brush-size');
@@ -94,6 +96,111 @@ document.addEventListener('DOMContentLoaded', () => {
             stickerToggle.classList.remove('active');
         });
     });
+
+    // --- Photo Upload ---
+    photoBtn.addEventListener('click', () => {
+        photoUpload.click();
+    });
+
+    photoUpload.addEventListener('change', (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+
+        const reader = new FileReader();
+        reader.onload = (event) => {
+            const img = new Image();
+            img.src = event.target.result;
+            img.onload = () => {
+                // Resize photo before adding to keep memory low
+                const maxDim = 800; // Max dimension for placed photo
+                let w = img.width;
+                let h = img.height;
+                if (w > maxDim || h > maxDim) {
+                    if (w > h) { h = (h / w) * maxDim; w = maxDim; }
+                    else { w = (w / h) * maxDim; h = maxDim; }
+                }
+
+                const tempCanvas = document.createElement('canvas');
+                tempCanvas.width = w;
+                tempCanvas.height = h;
+                const tctx = tempCanvas.getContext('2d');
+                tctx.drawImage(img, 0, 0, w, h);
+                
+                // Add as a sticker
+                saveState();
+                addDraggableSticker(tempCanvas.toDataURL('image/jpeg', 0.8));
+                photoUpload.value = ''; // Reset input
+            };
+        };
+        reader.readAsDataURL(file);
+    });
+
+    // --- Flatten & Capture Board Logics ---
+    async function captureBoard(isDownload = false) {
+        console.log('Capturing board... isDownload:', isDownload);
+        
+        // Target high-quality width for screenshot
+        const targetWidth = 1200; 
+        const canvasRect = canvas.getBoundingClientRect();
+        const ratio = targetWidth / canvasRect.width;
+        const targetHeight = canvasRect.height * ratio;
+
+        const finalCanvas = document.createElement('canvas');
+        finalCanvas.width = targetWidth;
+        finalCanvas.height = targetHeight;
+        const fctx = finalCanvas.getContext('2d');
+
+        // 1. Draw Board Background (White)
+        fctx.fillStyle = '#FFFFFF';
+        fctx.fillRect(0, 0, finalCanvas.width, finalCanvas.height);
+
+        // 2. Draw Hand-drawn Signature Layer
+        // We need to draw the source canvas properly scaled
+        fctx.drawImage(canvas, 0, 0, finalCanvas.width, finalCanvas.height);
+
+        // 3. Draw Stickers & Photos Layer
+        const stickers = document.querySelectorAll('.kd-placed-sticker');
+        const parentRect = canvas.parentElement.getBoundingClientRect();
+        
+        const drawPromises = Array.from(stickers).map(s => {
+            return new Promise(resolve => {
+                const img = new Image();
+                img.crossOrigin = "anonymous"; 
+                img.src = s.querySelector('img').src;
+                
+                img.onload = () => {
+                    const rect = s.getBoundingClientRect();
+                    const x = (rect.left - parentRect.left) * ratio;
+                    const y = (rect.top - parentRect.top) * ratio;
+                    const w = rect.width * ratio;
+                    const h = rect.height * ratio;
+                    fctx.drawImage(img, x, y, w, h);
+                    resolve();
+                };
+                img.onerror = () => {
+                    console.warn('Failed to load image for capture:', img.src);
+                    resolve();
+                };
+            });
+        });
+
+        await Promise.all(drawPromises);
+
+        // 4. Output as Compressed JPEG
+        const quality = isDownload ? 0.9 : 0.75;
+        const format = 'image/jpeg';
+        
+        if (isDownload) {
+            const dataUrl = finalCanvas.toDataURL(format, quality);
+            const link = document.createElement('a');
+            link.download = `kente_signature_${Date.now()}.jpg`;
+            link.href = dataUrl;
+            link.click();
+            return null;
+        } else {
+            return new Promise(resolve => finalCanvas.toBlob(resolve, format, quality));
+        }
+    }
 
     function addDraggableSticker(src, savedData = null) {
         const sticker = document.createElement('div');
@@ -278,50 +385,20 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- CLOUD SAVE (SUPABASE) ---
     saveBtn.addEventListener('click', async () => {
+        const guestName = document.getElementById('guest-name').value.trim();
+        if (!guestName) {
+            alert('請輸入您的姓名後再送出哦！');
+            return;
+        }
+
         if (loadingOverlay) loadingOverlay.classList.remove('kd-invisible');
         
         try {
-            // Flatten to 600px width
-            const targetWidth = 600;
-            const ratio = Math.max(window.devicePixelRatio || 1, 1);
-            const scale = targetWidth / (canvas.width / ratio);
-            const targetHeight = (canvas.height / ratio) * scale;
+            // 1. Capture and Compress the board
+            const blob = await captureBoard(false);
+            if (!blob) throw new Error('畫布截取失敗');
 
-            const finalCanvas = document.createElement('canvas');
-            finalCanvas.width = targetWidth;
-            finalCanvas.height = targetHeight;
-            const fctx = finalCanvas.getContext('2d');
-
-            fctx.fillStyle = '#FFFFFF';
-            fctx.fillRect(0, 0, finalCanvas.width, finalCanvas.height);
-            fctx.drawImage(canvas, 0, 0, finalCanvas.width, finalCanvas.height);
-
-            const stickers = document.querySelectorAll('.kd-placed-sticker');
-            const parentRect = canvas.parentElement.getBoundingClientRect();
-            const displayRatio = targetWidth / parentRect.width;
-
-            const drawPromises = Array.from(stickers).map(s => {
-                return new Promise(resolve => {
-                    const img = new Image();
-                    img.src = s.querySelector('img').src;
-                    img.crossOrigin = "anonymous"; // Essential for potential remote stickers
-                    img.onload = () => {
-                        const rect = s.getBoundingClientRect();
-                        const x = (rect.left - parentRect.left) * displayRatio;
-                        const y = (rect.top - parentRect.top) * displayRatio;
-                        const w = rect.width * displayRatio;
-                        const h = rect.height * displayRatio;
-                        fctx.drawImage(img, x, y, w, h);
-                        resolve();
-                    };
-                });
-            });
-
-            await Promise.all(drawPromises);
-
-            // 1. Convert to Blob
-            const blob = await new Promise(resolve => finalCanvas.toBlob(resolve, 'image/png'));
-            const fileName = `sig_${Date.now()}.png`;
+            const fileName = `sig_${Date.now()}.jpg`;
 
             // 2. Upload to Supabase Storage
             const { data: uploadData, error: uploadError } = await _supabase.storage
@@ -334,9 +411,6 @@ document.addEventListener('DOMContentLoaded', () => {
             const { data: { publicUrl } } = _supabase.storage
                 .from('signatures')
                 .getPublicUrl(fileName);
-
-            // Get Guest Name
-            const guestName = document.getElementById('guest-name').value.trim() || '嘉賓 / Guest';
 
             // 4. Insert into Database
             const { error: dbError } = await _supabase
@@ -351,7 +425,7 @@ document.addEventListener('DOMContentLoaded', () => {
             window.location.href = 'index.html';
         } catch (err) {
             console.error('Upload failed:', err);
-            alert('上傳失敗，請檢查網路連線或權限設定：' + err.message);
+            alert('上傳失敗：' + err.message);
         } finally {
             if (loadingOverlay) loadingOverlay.classList.add('kd-invisible');
         }

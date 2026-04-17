@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>柯文哲清清白白 我挺阿北線上簽名</title>
+    <title>柯文哲清清白白 我挺阿北線上簽名活動</title>
     <!-- Noto Sans for extreme clarity -->
     <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&display=swap" rel="stylesheet">
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
@@ -67,6 +67,10 @@
                     <button id="sticker-toggle" class="kd-btn-mini kd-flex-center kd-btn-tool" title="貼圖">
                         <span class="material-icons">face</span>
                     </button>
+                    <button id="photo-btn" class="kd-btn-mini kd-flex-center kd-btn-tool" title="上傳照片">
+                        <span class="material-icons">photo_camera</span>
+                    </button>
+                    <input type="file" id="photo-upload" accept="image/*" style="display: none;">
                 </div>
             </div>
 
@@ -78,10 +82,11 @@
             <!-- Name Input Field -->
             <div class="kd-name-input-wrap kd-m-top-15">
                 <span class="material-icons">person</span>
-                <input type="text" id="guest-name" class="kd-glass-input" placeholder="請輸入您的姓名 / Please enter your name" maxlength="20">
+                <input type="text" id="guest-name" class="kd-glass-input" placeholder="請輸入您的姓名" maxlength="20">
             </div>
-
             <p class="kd-v6-item-label kd-m-top-10 kd-v6-item-label-spaced">SIGN ABOVE / 請在上方區域提筆</p>
+
+            
         </main>
 
         <!-- Anchored Footer -->
