@@ -30,6 +30,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const userSigPreviewImg = document.getElementById('user-sig-preview-img');
     const userSigPreviewName = document.getElementById('user-sig-preview-name');
     const placementCancel = document.getElementById('placement-cancel');
+    const placementAuto = document.getElementById('placement-auto');
     const placementConfirm = document.getElementById('placement-confirm');
 
     let currentSize = 3;
@@ -42,6 +43,7 @@ document.addEventListener('DOMContentLoaded', () => {
     let finalPosY = 200;
     let finalRotation = 0;
     let placementScale = 0.5;
+    let existingSignaturesPositions = [];
 
     // --- Premium notification ---
     function showNotification(msg) {
@@ -299,7 +301,7 @@ document.addEventListener('DOMContentLoaded', () => {
             
             // Fetch Wall BG first to know the height
             const { data } = await _supabase.from('signatures').select('*').order('created_at', { ascending: false });
-            renderPlacementWall(data || []);
+            existingSignaturesPositions = renderPlacementWall(data || []);
             
             // Initial Position: Center of the viewport's current scroll or just a bit below the top buffer
             finalPosX = 300; 
@@ -329,6 +331,8 @@ document.addEventListener('DOMContentLoaded', () => {
         const viewportW = window.innerWidth / placementScale;
         const dynamicCols = Math.max(3, Math.floor((viewportW - 100) / 400));
         let maxRowY = 0;
+        const positions = [];
+
         signatures.forEach((sig, index) => {
             const col = index % dynamicCols; const row = Math.floor(index / dynamicCols);
             let px, py, rot;
@@ -339,6 +343,8 @@ document.addEventListener('DOMContentLoaded', () => {
                 py = 1280 + row * 320 + (Math.cos(index) * 40); // 4 rows buffer (4 * 320)
                 rot = (Math.sin(index * 8) * 15);
             }
+            positions.push({ x: px, y: py });
+
             maxRowY = Math.max(maxRowY, py);
             const card = document.createElement('div');
             card.className = 'kd-sig-card-free';
@@ -350,6 +356,8 @@ document.addEventListener('DOMContentLoaded', () => {
         placementContent.style.width = Math.max(viewportW, dynamicCols * 400 + 500) + 'px';
         placementContent.style.height = (maxRowY + 1200) + 'px';
         placementContent.style.transform = `scale(${placementScale})`;
+
+        return positions;
     }
 
     function initPlacementControls() {
@@ -405,6 +413,68 @@ document.addEventListener('DOMContentLoaded', () => {
 
     modalCancel.addEventListener('click', () => confirmModal.classList.add('kd-invisible'));
     placementCancel.addEventListener('click', () => placementScreen.classList.add('kd-invisible'));
+
+    placementAuto.addEventListener('click', () => {
+        // Find a non-overlapping spot
+        const cardW = 400; // conservative width
+        const cardH = 350; // conservative height
+        const viewportW = window.innerWidth / placementScale;
+        
+        let targetX = 300, targetY = 1280;
+        let found = false;
+
+        // Strategy: Try random spots first, checking against stored positions
+        for (let i = 0; i < 200; i++) {
+            const tx = 50 + Math.random() * (viewportW - cardW - 100);
+            const ty = 1280 + Math.random() * 2500;
+            
+            let collision = false;
+            for (const pos of existingSignaturesPositions) {
+                if (!(tx + cardW < pos.x || tx > pos.x + cardW || ty + cardH < pos.y || ty > pos.y + cardH)) {
+                    collision = true;
+                    break;
+                }
+            }
+            if (!collision) {
+                targetX = tx; targetY = ty;
+                found = true;
+                break;
+            }
+        }
+
+        if (!found) {
+            // Fallback: Place at the absolute bottom
+            let maxY = 1280;
+            existingSignaturesPositions.forEach(p => { if (p.y > maxY) maxY = p.y; });
+            targetX = 100 + Math.random() * (viewportW - 450);
+            targetY = maxY + 350;
+        }
+
+        const targetRot = (Math.random() * 30) - 15;
+        
+        // Update state
+        finalPosX = targetX;
+        finalPosY = targetY;
+        finalRotation = targetRot;
+
+        // Animate visually
+        userSigPreview.style.transition = 'all 0.6s cubic-bezier(0.34, 1.56, 0.64, 1)';
+        userSigPreview.style.left = finalPosX + 'px';
+        userSigPreview.style.top = finalPosY + 'px';
+        userSigPreview.style.rotate = finalRotation + 'deg';
+        
+        // Scroll to show the new position
+        setTimeout(() => {
+            placementViewport.scrollTo({
+                top: (finalPosY * placementScale) - 200,
+                left: (finalPosX * placementScale) - (window.innerWidth / 2) + 150,
+                behavior: 'smooth'
+            });
+            setTimeout(() => { userSigPreview.style.transition = ''; }, 600);
+        }, 100);
+        
+        showNotification('系統已為您找到一個空位！');
+    });
 
     placementConfirm.addEventListener('click', async () => {
         loadingOverlay.classList.remove('kd-invisible');

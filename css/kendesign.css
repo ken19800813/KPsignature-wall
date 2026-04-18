@@ -1344,4 +1344,33 @@ body {
     .kd-sig-card-free {
         width: 280px; /* Slightly smaller cards for mobile free mode */
     }
+
+    /* Placement Screen RWD */
+    .kd-placement-header {
+        padding: 15px 10px;
+    }
+    .kd-placement-header h3 {
+        font-size: 18px;
+    }
+    .kd-placement-footer {
+        padding: 12px 10px;
+        gap: 8px;
+    }
+    .kd-placement-footer .kd-btn-glass {
+        padding: 8px 4px;
+        font-size: 12px;
+        flex-direction: column;
+        height: auto;
+        min-height: 70px;
+        gap: 4px;
+    }
+    .kd-placement-footer .kd-btn-glass .material-icons {
+        margin: 0;
+        font-size: 22px;
+    }
+    .kd-placement-footer .kd-btn-glass.primary {
+        background: var(--kd-primary-gradient);
+        color: white;
+        border: none;
+    }
 }
