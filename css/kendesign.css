@@ -17,6 +17,7 @@
     --kd-bg-light: #F8FAFC;
     --kd-white: #FFFFFF;
     --kd-border: #F1F5F9;
+    --kd-primary-gradient: linear-gradient(135deg, #28c8c8, #1aa3a3);
 
     /* Shadows */
     --kd-card-shadow: 0 10px 25px -5px rgba(27, 57, 105, 0.05), 0 8px 10px -6px rgba(27, 57, 105, 0.05);
@@ -154,7 +155,7 @@ body {
 }
 
 .kd-btn-glass.primary {
-    background: linear-gradient(135deg, #28c8c8, #1aa3a3);
+    background: var(--kd-primary-gradient);
     color: white;
     border: none;
     box-shadow: 0 10px 20px rgba(40, 200, 200, 0.2);
@@ -163,7 +164,7 @@ body {
 .kd-btn-glass:active { transform: scale(0.95); }
 
 .kd-btn-sign-pill {
-    background: linear-gradient(135deg, #28c8c8, #1aa3a3);
+    background: var(--kd-primary-gradient);
     color: white;
     padding: 12px 35px;
     border-radius: 30px;
@@ -1004,7 +1005,7 @@ body {
 
 .kd-btn-modal-primary {
     flex: 2;
-    background: linear-gradient(135deg, #28c8c8, #1aa3a3);
+    background: var(--kd-primary-gradient);
     color: white;
     border: none;
     padding: 14px;
