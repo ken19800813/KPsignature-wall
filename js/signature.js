@@ -15,6 +15,11 @@ document.addEventListener('DOMContentLoaded', () => {
     const brushColorInput = document.getElementById('brush-color');
     const colorHexLabel = document.getElementById('color-hex');
     const loadingOverlay = document.getElementById('loading-overlay');
+    
+    // Confirmation Modal Elements
+    const confirmModal = document.getElementById('confirm-modal');
+    const modalCancel = document.getElementById('modal-cancel');
+    const modalConfirm = document.getElementById('modal-confirm');
 
     let currentSize = 3;
     let currentColor = '#1B3969';
@@ -180,22 +185,16 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- AI Content Moderation ---
     async function checkMaliceAI(blob, guestName) {
-        // 優先從 js/ai-config.js 讀取 (本地開發)，若無則嘗試從 localStorage 讀取 (線上環境手動設定)
-        let FINAL_KEY = "";
-        if (typeof AI_API_KEY !== 'undefined') {
-            FINAL_KEY = AI_API_KEY;
-        } else {
-            FINAL_KEY = localStorage.getItem('gemini_api_key') || "";
-        }
+        // 安全模式：金鑰不公開在程式碼中。
+        // 若要在線上環境(GitHub Pages)啟用，請在 Console 執行：
+        // localStorage.setItem("gemini_api_key", "您的金鑰內容");
+        const AI_API_KEY = localStorage.getItem("gemini_api_key") || ""; 
         
-        if (!FINAL_KEY) {
-            console.warn('AI 審核功能未啟用 (缺少 API Key)。若在線上環境，可在 Console 輸入 localStorage.setItem("gemini_api_key", "您的Key") 來啟用。');
+        if (!AI_API_KEY) {
+            console.log('AI 審核未啟用 (安全性考量，金鑰未內建在此版本中)');
             return true; 
         }
-
         try {
-            showNotification('AI 正在審核內容安全性...');
-            
             // 轉換圖片為 Base64
             const base64Data = await new Promise((resolve) => {
                 const reader = new FileReader();
@@ -228,7 +227,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 {"is_malicious": boolean, "reason": "說明攔截原因 (例如：偵測到針對特定對象的攻擊性詞彙)"}
             `;
 
-            const response = await fetch(`https://generativelanguage.googleapis.com/v1/models/gemini-2.0-flash-lite:generateContent?key=${FINAL_KEY}`, {
+            const response = await fetch(`https://generativelanguage.googleapis.com/v1/models/gemini-2.0-flash-lite:generateContent?key=${AI_API_KEY}`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
@@ -589,6 +588,27 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
 
+        // Show confirmation modal
+        if (confirmModal) {
+            confirmModal.classList.remove('kd-invisible');
+        }
+    });
+
+    if (modalCancel) {
+        modalCancel.addEventListener('click', () => {
+            confirmModal.classList.add('kd-invisible');
+        });
+    }
+
+    if (modalConfirm) {
+        modalConfirm.addEventListener('click', async () => {
+            confirmModal.classList.add('kd-invisible');
+            await proceedWithUpload();
+        });
+    }
+
+    async function proceedWithUpload() {
+        const guestName = document.getElementById('guest-name').value.trim();
         if (loadingOverlay) loadingOverlay.classList.remove('kd-invisible');
         
         try {
@@ -633,5 +653,5 @@ document.addEventListener('DOMContentLoaded', () => {
         } finally {
             if (loadingOverlay) loadingOverlay.classList.add('kd-invisible');
         }
-    });
+    }
 });
