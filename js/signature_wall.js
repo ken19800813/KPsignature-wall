@@ -10,6 +10,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     const searchNoInput = document.getElementById('search-no');
     const searchBtn = document.getElementById('btn-search');
     const btnToggleView = document.getElementById('btn-toggle-view');
+    const btnAutoplayScroll = document.getElementById('btn-autoplay-scroll');
+    const btnAutoplayCarousel = document.getElementById('btn-autoplay-carousel');
     const wallTitle = document.getElementById('wall-title');
     
     let allSignaturesData = [];
@@ -88,6 +90,123 @@ document.addEventListener('DOMContentLoaded', async () => {
         } else {
             currentMinWidth = e.target.value;
             document.documentElement.style.setProperty('--kd-wall-min-width', currentMinWidth + 'px');
+        }
+    });
+
+    // --- Autoplay Features ---
+    let scrollAnimFrame = null;
+    let isAutoScrolling = false;
+    let scrollDirection = 1; 
+
+    function autoScrollStep() {
+        if (!isAutoScrolling) return;
+        
+        const isWindowScroll = (wallViewport.scrollHeight <= wallViewport.clientHeight);
+        const scrollElement = isWindowScroll ? document.documentElement : wallViewport;
+        
+        // Prevent maxScroll from being negative
+        let maxScroll = scrollElement.scrollHeight - (isWindowScroll ? window.innerHeight : wallViewport.clientHeight);
+        if (maxScroll < 0) maxScroll = 0;
+        
+        if (isWindowScroll) {
+            window.scrollBy(0, scrollDirection * 2);
+        } else {
+            wallViewport.scrollTop += scrollDirection * 2;
+        }
+        
+        const currentScroll = isWindowScroll ? window.scrollY : wallViewport.scrollTop;
+        
+        if (scrollDirection === 1 && currentScroll >= maxScroll - 2) {
+            scrollDirection = -1;
+        } else if (scrollDirection === -1 && currentScroll <= 0) {
+            scrollDirection = 1;
+        }
+        
+        scrollAnimFrame = requestAnimationFrame(autoScrollStep);
+    }
+
+    btnAutoplayScroll.addEventListener('click', () => {
+        if (isCarouselRunning) btnAutoplayCarousel.click();
+
+        isAutoScrolling = !isAutoScrolling;
+        if (isAutoScrolling) {
+            btnAutoplayScroll.innerHTML = '<span class="material-icons">pause</span>停止滑動';
+            btnAutoplayScroll.classList.add('active');
+            scrollDirection = 1;
+            scrollAnimFrame = requestAnimationFrame(autoScrollStep);
+        } else {
+            btnAutoplayScroll.innerHTML = '<span class="material-icons">swap_vert</span>自動滑動';
+            btnAutoplayScroll.classList.remove('active');
+            cancelAnimationFrame(scrollAnimFrame);
+        }
+    });
+
+    let carouselInterval = null;
+    let isCarouselRunning = false;
+    let currentCarouselIndex = 0;
+
+    function nextCarouselSlide() {
+        let cards = Array.from(document.querySelectorAll('.kd-sig-card-free'));
+        if (cards.length === 0) return;
+
+        // Sort by sequence number ascending (001, 002...)
+        cards.sort((a, b) => {
+            return parseInt(a.getAttribute('data-seq')) - parseInt(b.getAttribute('data-seq'));
+        });
+
+        cards.forEach(c => {
+            c.classList.remove('kd-sig-highlight');
+            c.style.animation = '';
+        });
+
+        if (currentCarouselIndex >= cards.length) {
+            currentCarouselIndex = 0;
+        }
+
+        const foundCard = cards[currentCarouselIndex];
+        // Grid mode enlarge
+        currentMinWidth = Math.min(window.innerWidth - 80, 600);
+        document.documentElement.style.setProperty('--kd-wall-min-width', currentMinWidth + 'px');
+        zoomSlider.value = currentMinWidth;
+        
+        setTimeout(() => {
+            foundCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }, 100);
+        
+        foundCard.classList.add('kd-sig-highlight');
+        foundCard.style.animation = 'none';
+        foundCard.offsetHeight; 
+        foundCard.style.animation = 'kd-pulse-highlight 2s ease infinite';
+
+        currentCarouselIndex++;
+    }
+
+    btnAutoplayCarousel.addEventListener('click', () => {
+        if (isAutoScrolling) btnAutoplayScroll.click();
+
+        isCarouselRunning = !isCarouselRunning;
+        if (isCarouselRunning) {
+            // Force Grid Mode for Carousel
+            if (isFreeMode) btnToggleView.click();
+
+            btnAutoplayCarousel.innerHTML = '<span class="material-icons">pause</span>停止輪播';
+            btnAutoplayCarousel.classList.add('active');
+            currentCarouselIndex = 0;
+            nextCarouselSlide();
+            carouselInterval = setInterval(nextCarouselSlide, 3500); 
+        } else {
+            btnAutoplayCarousel.innerHTML = '<span class="material-icons">view_carousel</span>輪播模式';
+            btnAutoplayCarousel.classList.remove('active');
+            clearInterval(carouselInterval);
+            const cards = Array.from(document.querySelectorAll('.kd-sig-card-free'));
+            cards.forEach(c => {
+                c.classList.remove('kd-sig-highlight');
+                c.style.animation = '';
+            });
+            // Reset grid width
+            currentMinWidth = 300;
+            document.documentElement.style.setProperty('--kd-wall-min-width', '300px');
+            zoomSlider.value = 300;
         }
     });
 
@@ -233,37 +352,54 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     function performSearch() {
         const nameQuery = searchNameInput.value.trim().toLowerCase();
-        const noQuery = searchNoInput.value.trim().replace('#', '');
+        const noQuery = searchNoInput.value.trim().replace(/#/g, '').trim();
         
         const cards = Array.from(document.querySelectorAll('.kd-sig-card-free'));
         let foundCard = null;
 
         // Clear previous highlights
-        cards.forEach(c => c.classList.remove('kd-sig-highlight'));
+        cards.forEach(c => {
+            c.classList.remove('kd-sig-highlight');
+            c.style.animation = '';
+        });
 
         if (noQuery) {
-            // Numeric match (exact)
-            foundCard = cards.find(c => c.getAttribute('data-seq') === noQuery);
+            // Numeric match (normalized)
+            const targetSeq = parseInt(noQuery, 10);
+            if (!isNaN(targetSeq)) {
+                foundCard = cards.find(c => parseInt(c.getAttribute('data-seq'), 10) === targetSeq);
+            }
         } else if (nameQuery) {
             // Name match (partial)
             foundCard = cards.find(c => c.getAttribute('data-name').includes(nameQuery));
         }
 
         if (foundCard) {
+            const isWindowScroll = (wallViewport.scrollHeight <= wallViewport.clientHeight);
+
             if (isFreeMode) {
-                // In Free Mode, we scroll the viewport to the card's scaled center
+                // In Free Mode, we scroll the viewport or window to the card's scaled center
                 const rect = foundCard.getBoundingClientRect();
-                const viewRect = wallViewport.getBoundingClientRect();
                 
-                // Calculate how much we need to scroll relative to CURRENT scroll
-                const scrollX = wallViewport.scrollLeft + (rect.left - viewRect.left) - (viewRect.width / 2) + (rect.width / 2);
-                const scrollY = wallViewport.scrollTop + (rect.top - viewRect.top) - (viewRect.height / 2) + (rect.height / 2);
-                
-                wallViewport.scrollTo({
-                    left: scrollX,
-                    top: scrollY,
-                    behavior: 'smooth'
-                });
+                if (isWindowScroll) {
+                    const scrollX = window.scrollX + rect.left - (window.innerWidth / 2) + (rect.width / 2);
+                    const scrollY = window.scrollY + rect.top - (window.innerHeight / 2) + (rect.height / 2);
+                    window.scrollTo({
+                        left: scrollX,
+                        top: scrollY,
+                        behavior: 'smooth'
+                    });
+                } else {
+                    const viewRect = wallViewport.getBoundingClientRect();
+                    const scrollX = wallViewport.scrollLeft + (rect.left - viewRect.left) - (viewRect.width / 2) + (rect.width / 2);
+                    const scrollY = wallViewport.scrollTop + (rect.top - viewRect.top) - (viewRect.height / 2) + (rect.height / 2);
+                    
+                    wallViewport.scrollTo({
+                        left: scrollX,
+                        top: scrollY,
+                        behavior: 'smooth'
+                    });
+                }
             } else {
                 foundCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
             }
@@ -283,4 +419,11 @@ document.addEventListener('DOMContentLoaded', async () => {
     [searchNameInput, searchNoInput].forEach(input => { input.addEventListener('keypress', (e) => { if (e.key === 'Enter') performSearch(); }); });
     window.addEventListener('resize', () => renderWall(allSignaturesData));
     fetchSignatures();
+
+    window.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') {
+            if (isAutoScrolling) btnAutoplayScroll.click();
+            if (isCarouselRunning) btnAutoplayCarousel.click();
+        }
+    });
 });
