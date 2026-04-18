@@ -11,20 +11,17 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="js/supabase-config.js"></script>
 </head>
-<body class="kd-app-glass-v5 free-mode">
-    <div class="kd-wall-v6-container">
-        <main class="kd-flex-1 kd-flex-col">
+<body class="kd-app-glass-v5">
+    <div class="kd-wall-v6-container kd-wall-v6-padding">
+
+
+
+        <main class="kd-flex-1">
             <section class="kd-wall-header kd-wall-header-v6">
-                <div class="kd-view-toggle-wrap">
-                    <button id="btn-toggle-view" class="kd-btn-view-toggle">
-                        <span class="material-icons">dashboard</span>
-                        切換排列模式
-                    </button>
-                </div>
                 <h2 class="kd-v6-title kd-m-bottom-8">柯文哲<span class="kd-unlock-char" data-char="清">清</span><span class="kd-unlock-char" data-char="清">清</span><span class="kd-unlock-char" data-char="白">白</span><span class="kd-unlock-char" data-char="白">白</span></h2>
-                <h2 id="wall-title" class="kd-wall-subtitle">自由貼上的 挺阿北簽名牆</h2>
+                <h2>我挺阿北簽名展示牆</h2>
                 <div class="kd-wall-decoration-line"></div>
-                <p class="kd-v6-item-label">Signature Wall</p>
+                <p class="kd-v6-item-label">Signature Gallery</p>
             </section>
 
             <!-- Search Section -->
@@ -43,29 +40,25 @@
                 </button>
             </section>
 
-            <div id="wall-viewport" class="kd-free-wall-viewport">
-                <div id="wall-scale-wrapper">
-                    <div id="wall-content" class="kd-free-wall-content">
-                        <!-- Dynamically rendered cards -->
-                        <div id="signature-wall"></div>
-                    </div>
-                </div>
-            </div>
+            <!-- Signature Grid -->
+            <section id="signature-wall" class="kd-signature-wall-dense kd-wall-grid-padding">
+                <!-- Dynamically rendered -->
+            </section>
         </main>
 
         <!-- Refined Floating Control Bar -->
         <div class="kd-wall-footer-refined">
-            <!-- Zoom Slider (Acts as scale for the whole wall) -->
+            <!-- Zoom Slider -->
             <div class="kd-zoom-slider-wrap">
-                <span class="material-icons">zoom_out</span>
-                <input type="range" id="zoom-slider" class="kd-range-input" min="10" max="150" value="40">
-                <span class="material-icons">zoom_in</span>
+                <span class="material-icons">photo_size_select_small</span>
+                <input type="range" id="zoom-slider" class="kd-range-input" min="100" max="800" value="350">
+                <span class="material-icons">photo_size_select_large</span>
             </div>
             
             <!-- Compact Action Button -->
             <a href="signature.html" class="kd-btn-sign-pill">
                 <span class="material-icons">draw</span>
-                我也要簽名
+                我要簽名
             </a>
         </div>
     </div>

@@ -66,6 +66,7 @@
             <!-- THE 4:3 CANVAS CONTAINER - STRICT -->
             <div class="kd-canvas-absolute-43">
                 <canvas id="signature-canvas"></canvas>
+                <div class="kd-canvas-watermark">柯文哲清清白白</div>
             </div>
 
             <!-- Name Input Field -->
@@ -114,6 +115,37 @@
                 <button id="modal-confirm" class="kd-btn-modal-primary">我已閱讀並確認</button>
             </div>
         </div>
+    </div>
+
+    <!-- Interactive Placement Screen -->
+    <div id="placement-screen" class="kd-placement-overlay kd-invisible">
+        <header class="kd-placement-header">
+            <h3>選擇張貼位置</h3>
+            <p>請拖曳您的簽名（藍色框框）到您喜歡的位置，然後點擊確認。</p>
+        </header>
+        <div id="placement-viewport" class="kd-free-wall-viewport">
+            <div id="placement-content" class="kd-free-wall-content">
+                <div id="placement-wall-bg"></div>
+                <!-- User Signature Preview -->
+                <div id="user-sig-preview" class="kd-sig-card-free kd-user-sig-active">
+                    <div class="kd-sig-number">New</div>
+                    <img src="" id="user-sig-preview-img" class="kd-sig-img" alt="Your Signature">
+                    <div class="kd-sig-meta-v2">
+                        <span class="kd-sig-name" id="user-sig-preview-name">您的名字</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <footer class="kd-placement-footer">
+            <button id="placement-cancel" class="kd-btn-glass kd-flex-1">
+                <span class="material-icons">chevron_left</span>
+                返回修改
+            </button>
+            <button id="placement-confirm" class="kd-btn-glass primary kd-flex-1">
+                <span class="material-icons">check_circle</span>
+                確認張貼
+            </button>
+        </footer>
     </div>
 
     <!-- Marquee Footer -->
