@@ -209,9 +209,12 @@ document.addEventListener('DOMContentLoaded', () => {
         });
         await Promise.all(drawPromises);
         fctx.fillStyle = '#28c8c8';
-        fctx.font = `900 ${Math.round(52 * ratio)}px "Noto Sans TC"`;
-        fctx.textAlign = 'right'; fctx.textBaseline = 'top';
-        fctx.fillText('柯文哲清清白白', finalCanvas.width - (25 * ratio), (25 * ratio));
+        fctx.font = `900 ${Math.round(28 * ratio)}px "Noto Sans TC"`;
+        fctx.textAlign = 'right'; 
+        fctx.textBaseline = 'alphabetic'; 
+        const waterX = finalCanvas.width - (20 * ratio);
+        const waterY = finalCanvas.height - (10 * ratio);
+        fctx.fillText('柯文哲清清白白', waterX, waterY);
         if (isDownload) {
             const link = document.createElement('a');
             link.download = `sig_${Date.now()}.jpg`; link.href = finalCanvas.toDataURL('image/jpeg', 0.9); link.click();

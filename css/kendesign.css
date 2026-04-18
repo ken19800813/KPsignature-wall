@@ -596,11 +596,12 @@ body {
 
 /* Admin Tools for Wall */
 .kd-sig-admin-tools {
-    display: flex;
-    gap: 5px;
+    display: none;
+    gap: 8px;
     position: absolute;
-    top: 5px;
-    right: 5px;
+    top: 8px;
+    right: 8px;
+    z-index: 100;
 }
 
 .kd-delete-sig, .kd-print-sig {
@@ -627,6 +628,10 @@ body {
 
 .kd-delete-sig { color: var(--kd-error); }
 .kd-print-sig { color: var(--kd-primary-blue); }
+
+.admin-mode-active .kd-sig-admin-tools {
+    display: flex !important;
+}
 
 .admin-mode-active .kd-delete-sig, 
 .admin-mode-active .kd-print-sig {
@@ -1031,16 +1036,16 @@ body {
 /* --- Canvas Watermark --- */
 .kd-canvas-watermark {
     position: absolute;
-    right: 25px;
-    bottom: 10px;
-    color: #28c8c8;
+    right: 20px !important;
+    bottom: 5px !important;
+    top: auto !important;
+    color: #28c8c8 !important;
     font-size: 30px;
     font-weight: 900;
     pointer-events: none;
     z-index: 2000;
     user-select: none;
     letter-spacing: 4px;
-    opacity: 1;
     text-shadow: 0 4px 12px rgba(40, 200, 200, 0.3);
 }
 
