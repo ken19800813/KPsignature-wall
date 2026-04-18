@@ -297,9 +297,10 @@ document.addEventListener('DOMContentLoaded', async () => {
                 card.style.left = `${px}px`; card.style.top = `${py}px`; card.style.rotate = `${rot}deg`;
             }
             
+            const imageUrl = sig.image_url + (sig.image_url.includes('?') ? '&' : '?') + 't=' + new Date(sig.created_at).getTime();
             card.innerHTML = `
                 <div class="kd-sig-number">#${seqNo}</div>
-                <img src="${sig.image_url}" class="kd-sig-img" alt="Signature" draggable="false">
+                <img src="${imageUrl}" class="kd-sig-img" alt="Signature" draggable="false">
                 <div class="kd-sig-meta-v2">
                     <span class="kd-sig-name">${displayName}</span>
                     <span class="kd-sig-date">${date}</span>
@@ -310,7 +311,7 @@ document.addEventListener('DOMContentLoaded', async () => {
                 </div>
             `;
             
-            card.querySelector('.kd-print-sig').addEventListener('click', (e) => { e.stopPropagation(); printSignature(sig.image_url); });
+            card.querySelector('.kd-print-sig').addEventListener('click', (e) => { e.stopPropagation(); printSignature(imageUrl); });
             card.querySelector('.kd-delete-sig').addEventListener('click', (e) => { e.stopPropagation(); deleteSignature(sig.id, sig.image_url); });
             fragment.appendChild(card);
         });

@@ -44,6 +44,7 @@ document.addEventListener('DOMContentLoaded', () => {
     let finalRotation = 0;
     let placementScale = 0.5;
     let existingSignaturesPositions = [];
+    let currentSignatureBlob = null; // Store blob to prevent redundant captures and canvas-clearing bugs
 
     // --- Premium notification ---
     function showNotification(msg) {
@@ -295,8 +296,10 @@ document.addEventListener('DOMContentLoaded', () => {
         
         loadingOverlay.classList.remove('kd-invisible');
         try {
-            const blob = await captureBoard();
-            const url = URL.createObjectURL(blob);
+            // Capture ONCE and store. This prevents issues if the canvas is cleared by resize events
+            // during the transition or while the user is on the placement screen.
+            currentSignatureBlob = await captureBoard();
+            const url = URL.createObjectURL(currentSignatureBlob);
             userSigPreviewImg.src = url;
             userSigPreviewName.textContent = guestName;
             
@@ -354,7 +357,9 @@ document.addEventListener('DOMContentLoaded', () => {
             card.className = 'kd-sig-card-free';
             card.style.left = px + 'px'; card.style.top = py + 'px'; card.style.rotate = rot + 'deg';
             card.style.opacity = '0.5'; card.style.pointerEvents = 'none';
-            card.innerHTML = `<img src="${sig.image_url}" class="kd-sig-img"><div class="kd-sig-meta-v2"><span class="kd-sig-name">${sig.display_name}</span></div>`;
+            // Add cache buster to prevent showing old images
+            const imageUrl = sig.image_url + (sig.image_url.includes('?') ? '&' : '?') + 't=' + new Date(sig.created_at).getTime();
+            card.innerHTML = `<img src="${imageUrl}" class="kd-sig-img"><div class="kd-sig-meta-v2"><span class="kd-sig-name">${sig.display_name}</span></div>`;
             placementWallBg.appendChild(card);
         });
         placementContent.style.width = Math.max(viewportW, dynamicCols * 400 + 500) + 'px';
@@ -493,11 +498,16 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     placementConfirm.addEventListener('click', async () => {
+        if (!currentSignatureBlob) {
+            alert('找不到簽名資料，請重新嘗試');
+            placementScreen.classList.add('kd-invisible');
+            return;
+        }
+
         loadingOverlay.classList.remove('kd-invisible');
         try {
-            const blob = await captureBoard();
             const fileName = `sig_${Date.now()}.jpg`;
-            await _supabase.storage.from('signatures').upload(fileName, blob);
+            await _supabase.storage.from('signatures').upload(fileName, currentSignatureBlob);
             const { data: { publicUrl } } = _supabase.storage.from('signatures').getPublicUrl(fileName);
             
             await _supabase.from('signatures').insert([{
