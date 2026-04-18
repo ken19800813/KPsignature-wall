@@ -209,7 +209,7 @@ document.addEventListener('DOMContentLoaded', () => {
         });
         await Promise.all(drawPromises);
         fctx.fillStyle = '#28c8c8';
-        fctx.font = `900 ${Math.round(28 * ratio)}px "Noto Sans TC"`;
+        fctx.font = `900 ${Math.round(18 * ratio)}px "Noto Sans TC"`;
         fctx.textAlign = 'right'; 
         fctx.textBaseline = 'alphabetic'; 
         const waterX = finalCanvas.width - (20 * ratio);
@@ -306,9 +306,10 @@ document.addEventListener('DOMContentLoaded', () => {
             const { data } = await _supabase.from('signatures').select('*').order('created_at', { ascending: false });
             existingSignaturesPositions = renderPlacementWall(data || []);
             
-            // Initial Position: Center of the viewport's current scroll or just a bit below the top buffer
-            finalPosX = 300; 
-            finalPosY = 1280; // Start at the boundary (4 rows of space above)
+            // Initial Position: Centered horizontally, and start at the boundary (4 rows of space above)
+            const contentW = parseFloat(placementContent.style.width) || (window.innerWidth / placementScale);
+            finalPosX = (contentW - 350) / 2;
+            finalPosY = 1280; 
             finalRotation = (Math.random() * 20) - 10;
             
             userSigPreview.style.left = finalPosX + 'px';
@@ -371,7 +372,11 @@ document.addEventListener('DOMContentLoaded', () => {
                 const dx = (e.clientX - lx) / placementScale; const dy = (e.clientY - ly) / placementScale;
                 finalPosX += dx; finalPosY += dy;
                 
-                // LIMIT UPWARD GROWTH: Max 4 rows above (y=0)
+                // Boundaries
+                const currentW = parseFloat(placementContent.style.width) || (window.innerWidth / placementScale);
+                const padding = 60; // 增加邊距緩衝，防止旋轉時超出
+                if (finalPosX < padding) finalPosX = padding;
+                if (finalPosX > currentW - 350 - padding) finalPosX = currentW - 350 - padding;
                 if (finalPosY < 0) finalPosY = 0;
                 
                 userSigPreview.style.left = finalPosX + 'px'; userSigPreview.style.top = finalPosY + 'px';
@@ -391,6 +396,14 @@ document.addEventListener('DOMContentLoaded', () => {
             if (isUserDrag) {
                 const dx = (e.touches[0].clientX - lx) / placementScale; const dy = (e.touches[0].clientY - ly) / placementScale;
                 finalPosX += dx; finalPosY += dy;
+                
+                // Boundaries
+                const currentW = parseFloat(placementContent.style.width) || (window.innerWidth / placementScale);
+                const padding = 60; // 增加邊距緩衝，防止旋轉時超出
+                if (finalPosX < padding) finalPosX = padding;
+                if (finalPosX > currentW - 350 - padding) finalPosX = currentW - 350 - padding;
+                if (finalPosY < 0) finalPosY = 0;
+
                 userSigPreview.style.left = finalPosX + 'px'; userSigPreview.style.top = finalPosY + 'px';
                 lx = e.touches[0].clientX; ly = e.touches[0].clientY;
                 
