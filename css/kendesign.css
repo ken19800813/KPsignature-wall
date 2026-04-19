@@ -60,7 +60,7 @@ body {
 
 /* Header System */
 .kd-header {
-    height: 70px;
+    height: 90px;
     display: flex;
     align-items: center;
     padding: 0 20px;
@@ -100,13 +100,32 @@ body {
     transform: scale(0.9);
 }
 
-.kd-header-title {
+.kd-header-title-group {
     flex: 1;
-    text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding-right: 44px; /* Offset for the back button to center perfectly */
+}
+
+.kd-header-title {
     font-size: 20px;
-    font-weight: 600;
+    font-weight: 900;
     color: var(--kd-dark-blue);
+    letter-spacing: 1px;
+    line-height: 1.2;
+}
+
+.kd-header-subtitle {
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--kd-primary-blue);
+    opacity: 1;
+    margin-top: 6px;
     letter-spacing: 0.5px;
+    text-align: center;
+    max-width: 90%;
 }
 
 /* UI Utilities */
@@ -736,8 +755,8 @@ body {
     border: 1px dashed rgba(0,0,0,0.1);
 }
 
-/* Guest Name Input Styles */
-.kd-name-input-wrap {
+/* Single Name Input Layout */
+.kd-name-input-wrap-v2 {
     display: flex;
     align-items: center;
     gap: 12px;
@@ -747,19 +766,18 @@ body {
     border-radius: 30px;
     padding: 8px 20px;
     width: 320px;
-    margin-left: auto;
-    margin-right: auto;
+    margin: 15px auto 0;
     transition: all 0.3s;
 }
 
-.kd-name-input-wrap:focus-within {
+.kd-name-input-wrap-v2:focus-within {
     background: rgba(255, 255, 255, 0.8);
     border-color: var(--kd-primary-blue);
     box-shadow: 0 4px 15px rgba(40, 200, 200, 0.2);
     width: 350px;
 }
 
-.kd-name-input-wrap .material-icons {
+.kd-name-input-wrap-v2 .material-icons {
     color: var(--kd-primary-blue);
     font-size: 20px;
 }
@@ -778,6 +796,42 @@ body {
     color: var(--kd-text-muted);
     font-size: 13px;
     font-weight: 400;
+}
+
+/* Modal Highlight */
+.kd-modal-highlight {
+    color: #1B3969;
+    font-weight: 900;
+    background: rgba(40, 200, 200, 0.1);
+    padding: 10px;
+    border-radius: 12px;
+    border-left: 4px solid var(--kd-primary-blue);
+}
+
+/* Canvas Split Visual (Subtle) */
+.kd-canvas-absolute-43::after {
+    content: '';
+    position: absolute;
+    left: 5%;
+    right: 5%;
+    bottom: 30%;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(40, 200, 200, 0.15), transparent);
+    pointer-events: none;
+    z-index: 5;
+}
+
+.kd-canvas-absolute-43::before {
+    content: 'SIGNATURE / 簽名';
+    position: absolute;
+    top: 15px;
+    left: 20px;
+    font-size: 10px;
+    font-weight: 900;
+    color: rgba(40, 200, 200, 0.2);
+    letter-spacing: 2px;
+    pointer-events: none;
+    z-index: 5;
 }
 
 /* Dual Column Meta */

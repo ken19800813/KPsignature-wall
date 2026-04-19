@@ -216,6 +216,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const waterX = finalCanvas.width - (20 * ratio);
         const waterY = finalCanvas.height - (10 * ratio);
         fctx.fillText('柯文哲清清白白', waterX, waterY);
+        
         if (isDownload) {
             const link = document.createElement('a');
             link.download = `sig_${Date.now()}.jpg`; link.href = finalCanvas.toDataURL('image/jpeg', 0.9); link.click();
