@@ -12,11 +12,13 @@ document.addEventListener('DOMContentLoaded', async () => {
     const btnToggleView = document.getElementById('btn-toggle-view');
     const btnAutoplayScroll = document.getElementById('btn-autoplay-scroll');
     const btnAutoplayCarousel = document.getElementById('btn-autoplay-carousel');
+    const btnSortOrder = document.getElementById('btn-sort-order');
     const wallTitle = document.getElementById('wall-title');
     
     let allSignaturesData = [];
     let isFreeMode = true;
     let wallScale = 0.5; 
+    let sortOrder = 'desc'; // 'desc' (newest first) or 'asc' (oldest first)
     let currentMinWidth = 300;
     let currentUnscaledWidth = 3000;
     let currentUnscaledHeight = 3000;
@@ -47,13 +49,85 @@ document.addEventListener('DOMContentLoaded', async () => {
             _0xnot.innerHTML = `
                 <div style="display:flex;align-items:center;gap:8px;"><span class="material-icons" style="font-size:18px;">lock_open</span><span>管理權限已解除</span></div>
                 <div style="font-size:12px;opacity:0.8;font-weight:normal;letter-spacing:1px;border-top:1px solid rgba(255,255,255,0.2);padding-top:4px;margin-top:2px;">📊 累計網頁瀏覽人次：${viewCount}</div>
+                <button id="btn-admin-tidy" style="margin-top:8px;background:rgba(255,255,255,0.2);border:1px solid rgba(255,255,255,0.3);color:white;padding:4px 12px;border-radius:20px;font-size:12px;cursor:pointer;display:flex;align-items:center;gap:4px;width:100%;justify-content:center;transition:all 0.3s;">
+                    <span class="material-icons" style="font-size:14px;">auto_fix_high</span>立即整理簽名間距
+                </button>
             `;
             document.body.appendChild(_0xnot);
+            
+            const tidyBtn = _0xnot.querySelector('#btn-admin-tidy');
+            tidyBtn.addEventListener('mouseenter', () => tidyBtn.style.background = 'rgba(255,255,255,0.4)');
+            tidyBtn.addEventListener('mouseleave', () => tidyBtn.style.background = 'rgba(255,255,255,0.2)');
+            tidyBtn.addEventListener('click', () => {
+                if (confirm('確定要重新排列所有簽名嗎？這將消除空白間隙。')) {
+                    tidySignatures();
+                }
+            });
+
             setTimeout(() => {
                 _0xnot.style.opacity = '0';
                 _0xnot.style.transition = 'opacity 0.5s ease';
                 setTimeout(() => _0xnot.remove(), 500);
             }, 4000);
+        };
+
+        const tidySignatures = async () => {
+            const notif = document.createElement('div');
+            notif.className = 'kd-notification';
+            notif.innerHTML = '正在整理簽名牆，請稍候...';
+            document.body.appendChild(notif);
+
+            try {
+                const { data: signatures, error } = await _supabase.from('signatures').select('*').order('created_at', { ascending: false });
+                if (error) throw error;
+
+                const CELL_W = 400;
+                const CELL_H = 320;
+                const viewportW = (wallViewport.clientWidth || window.innerWidth) / wallScale;
+                const cols = Math.max(3, Math.floor((viewportW - 100) / CELL_W));
+                const startY = 1280;
+                const startX = 100;
+
+                const updates = signatures.map((sig, index) => {
+                    const col = index % cols;
+                    const row = Math.floor(index / cols);
+                    const jitterX = (Math.sin(index * 12.3) * 60);
+                    const jitterY = (Math.cos(index * 45.6) * 40);
+                    const rotation = (Math.sin(index * 88.8) * 15);
+                    
+                    return {
+                        id: sig.id,
+                        pos_x: startX + (col * CELL_W) + jitterX,
+                        pos_y: startY + (row * CELL_H) + jitterY,
+                        rotation: rotation
+                    };
+                });
+
+                // Batch updates (Supabase doesn't support batch update by ID in one call easily without RPC)
+                // We'll do them in parallel with a limit to avoid rate limits
+                const BATCH_SIZE = 10;
+                for (let i = 0; i < updates.length; i += BATCH_SIZE) {
+                    const batch = updates.slice(i, i + BATCH_SIZE);
+                    await Promise.all(batch.map(upd => 
+                        _supabase.from('signatures').update({
+                            pos_x: upd.pos_x,
+                            pos_y: upd.pos_y,
+                            rotation: upd.rotation
+                        }).eq('id', upd.id)
+                    ));
+                }
+
+                notif.innerHTML = '✨ 簽名牆已整理完畢！';
+                setTimeout(() => {
+                    notif.remove();
+                    window.location.reload();
+                }, 2000);
+
+            } catch (err) {
+                console.error('Tidy failed:', err);
+                notif.innerHTML = '❌ 整理失敗: ' + err.message;
+                setTimeout(() => notif.remove(), 3000);
+            }
         };
         const _0x992 = ["ArrowUp", "ArrowUp", "ArrowDown", "ArrowDown", "ArrowLeft", "ArrowRight", "ArrowLeft", "ArrowRight", "b", "a"];
         let _0xidx = 0;
@@ -233,7 +307,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     async function fetchSignatures() {
         wallContainer.innerHTML = '<div class="kd-wall-loading"><p>正在佈置簽名牆...</p></div>';
         try {
-            const { data, error } = await _supabase.from('signatures').select('*').order('created_at', { ascending: false });
+            const { data, error } = await _supabase.from('signatures').select('*').order('created_at', { ascending: (sortOrder === 'asc') });
             if (error) throw error;
             allSignaturesData = data;
             renderWall(data);
@@ -241,6 +315,17 @@ document.addEventListener('DOMContentLoaded', async () => {
             console.error('Fetch failed:', err);
             renderWall([]);
         }
+    }
+
+    if (btnSortOrder) {
+        btnSortOrder.addEventListener('click', () => {
+            sortOrder = (sortOrder === 'desc' ? 'asc' : 'desc');
+            btnSortOrder.innerHTML = `
+                <span class="material-icons">sort</span>
+                ${sortOrder === 'desc' ? '由新到舊' : '由舊到新'}
+            `;
+            fetchSignatures();
+        });
     }
 
     function renderWall(signatures) {
@@ -268,18 +353,32 @@ document.addEventListener('DOMContentLoaded', async () => {
         const fragment = document.createDocumentFragment(); // Use fragment for performance
 
         signatures.forEach((sig, index) => {
-            const seqNo = totalCount - index;
+            let seqNo;
+            if (sortOrder === 'desc') {
+                seqNo = totalCount - index;
+            } else {
+                seqNo = index + 1;
+            }
+            
             const date = new Date(sig.created_at).toLocaleString('zh-TW', {
                 month: 'numeric', day: 'numeric', hour: '2-digit', minute: '2-digit'
             });
             const displayName = sig.display_name || '嘉賓';
             
             let px, py, rot;
-            if (sig.pos_x !== null && sig.pos_y !== null && sig.pos_x !== undefined) {
+            // 關鍵修正：
+            // 1. 如果在「排列模式」，絕對不使用資料庫座標，完全依照 index 排列。
+            // 2. 如果在「自由模式」但使用者切換到了「由舊到新」，我們也強制重新排列，否則視覺上不會動。
+            const shouldIgnoreDBPos = !isFreeMode || (sortOrder === 'asc'); 
+            
+            if (sig.pos_x !== null && sig.pos_y !== null && !shouldIgnoreDBPos) {
                 px = sig.pos_x; py = sig.pos_y; rot = sig.rotation || 0;
             } else {
-                const col = index % dynamicCols; const row = Math.floor(index / dynamicCols);
-                const jitterX = (Math.sin(index * 12.3) * 60); const jitterY = (Math.cos(index * 45.6) * 40);
+                // 自動計算位置：確保 index 0 永遠在最上面 (y=1280)
+                const col = index % dynamicCols; 
+                const row = Math.floor(index / dynamicCols);
+                const jitterX = (Math.sin(index * 12.3) * 60); 
+                const jitterY = (Math.cos(index * 45.6) * 40);
                 rot = (Math.sin(index * 88.8) * 15);
                 px = 100 + (col * CELL_W) + jitterX; 
                 py = 1280 + (row * CELL_H) + jitterY;
